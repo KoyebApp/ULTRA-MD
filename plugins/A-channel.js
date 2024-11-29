@@ -36,7 +36,7 @@ let handler = async (m, { conn, text, command }) => {
     }
 
     // Fetch metadata for the channel using the result (channel ID)
-    let data = await cioBotz.newsletterMetadata("invite", result);
+    let data = await conn.newsletterMetadata("invite", result);
     
     // If data is not fetched, return a failure message
     if (!data) {
