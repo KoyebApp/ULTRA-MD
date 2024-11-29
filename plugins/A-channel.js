@@ -39,7 +39,23 @@ let handler = async (m, { conn, text, command }) => {
 
     // Make an HTTP request to fetch metadata for the channel
     const response = await fetch(`https://api.whatsapp.com/channel/${result}/metadata`);
-    const data = await response.json();
+
+    // Check if the response is successful (HTTP status 200)
+    if (!response.ok) {
+      return m.reply("Failed to fetch data. Status: " + response.status);
+    }
+
+    // Log the raw response for debugging purposes
+    const rawResponse = await response.text();
+    console.log("Raw Response: ", rawResponse);
+
+    // Check if the response is HTML (it starts with <!DOCTYPE html>)
+    if (rawResponse.startsWith('<!DOCTYPE html>')) {
+      return m.reply("Received an HTML response, possibly an error page. Please check the link.");
+    }
+
+    // Parse the JSON response
+    const data = JSON.parse(rawResponse);
 
     // If data is not fetched, return a failure message
     if (!data) {
