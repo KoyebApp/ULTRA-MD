@@ -1,5 +1,16 @@
 let handler = async (m, { conn, text, command }) => {
+  // Check if the text is provided
   if (!text) return m.reply(`Usage ${prefix + command} *linkchannel*`);
+
+  // Check if the text is a valid URL or contains the required substring
+  function isUrl(str) {
+    const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+      '((([A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|\\[?[A-F0-9]*:[A-F0-9]*\\]?)' + // domain name and IP
+      '(\\:[0-9]+)?' + // port
+      '(\\/[-A-Z0-9+&@#/%=~_|$?!,;]*[^\\.,;\\s])?', 'i');
+    return pattern.test(str);
+  }
+
   if (!isUrl(text) && !text.includes('whatsapp.com/channel')) return m.reply("Link not valid");
   
   await conn.sendMessage(m.chat, {
