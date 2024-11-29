@@ -1,10 +1,16 @@
 let handler = async (m, { conn }) => {
-  let owner = '923051391007@s.whatsapp.net'; // Nomor owner
+  // Get all admins of the group
+  let admins = await conn.groupMetadata(m.chat).then(group => group.participants.filter(participant => participant.admin === "admin").map(admin => admin.id));
+  
+  // Get all participants in the group
   let participants = await conn.groupMetadata(m.chat).then(group => group.participants);
+  
+  // Filter out admins (owners) and the bot itself
   let users = participants
     .map(participant => participant.id)
-    .filter(user => !(user === owner || user === conn.user.jid));
+    .filter(user => !(admins.includes(user) || user === conn.user.jid));
 
+  // Kick all filtered users
   for (let user of users) {
     if (user.endsWith('@s.whatsapp.net')) {
       await conn.groupParticipantsUpdate(m.chat, [user], "remove");
