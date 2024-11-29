@@ -1,9 +1,12 @@
 let handler = async (m, { conn, text, command }) => {
   if (!text) return m.reply(`Usage: ${prefix + command} *linkchannel*`);
-  
-  // Validate the URL
-  if (!isUrl(text) || !text.includes('whatsapp.com/channel')) return m.reply("Link not valid");
 
+  // Check if the URL contains 'whatsapp.com/channel' and starts with 'https://'
+  if (!text.startsWith('https://whatsapp.com/channel/') || !isUrl(text)) {
+    return m.reply("Link not valid");
+  }
+
+  // React with a loading emoji
   await conn.sendMessage(m.chat, {
     react: {
       text: "⏳",
@@ -24,7 +27,10 @@ let handler = async (m, { conn, text, command }) => {
   }
 
   try {
+    // Extract the channel ID from the URL
     let result = text.split('https://whatsapp.com/channel/')[1];
+
+    // Fetch metadata for the channel using the result (channel ID)
     let data = await cioBotz.newsletterMetadata("invite", result);
     
     if (!data) {
@@ -50,7 +56,7 @@ ${data.description || 'No description available'}
   }
 };
 
-// Helper function to validate URL
+// Helper function to validate URL (basic validation)
 function isUrl(text) {
   const regex = /^(https?:\/\/)[^\s$.?#].[^\s]*$/i;
   return regex.test(text);
