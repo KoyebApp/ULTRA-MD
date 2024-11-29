@@ -1,4 +1,5 @@
 let handler = async (m, { conn, text, command }) => {
+  // If no text is provided, show usage instructions
   if (!text) return m.reply(`Usage: ${prefix + command} *linkchannel*`);
 
   // Check if the URL starts with 'https://whatsapp.com/channel/'
@@ -6,7 +7,7 @@ let handler = async (m, { conn, text, command }) => {
     return m.reply("Link not valid");
   }
 
-  // React with a loading emoji
+  // React with a loading emoji to indicate the bot is processing the request
   await conn.sendMessage(m.chat, {
     react: {
       text: "⏳",
@@ -14,6 +15,7 @@ let handler = async (m, { conn, text, command }) => {
     }
   });
 
+  // Function to format the date from a timestamp
   function formatDate(timestamp) {
     const date = new Date(timestamp * 1000);
     const months = [
@@ -33,6 +35,11 @@ let handler = async (m, { conn, text, command }) => {
     // Ensure the result (channel ID) is not empty
     if (!result) {
       return m.reply("Link not valid");
+    }
+
+    // Ensure the newsletterMetadata method exists
+    if (typeof conn.newsletterMetadata !== 'function') {
+      return m.reply("The method 'newsletterMetadata' is not available.");
     }
 
     // Fetch metadata for the channel using the result (channel ID)
@@ -59,11 +66,11 @@ ${data.description || 'No description available'}
     m.reply(teks);
   } catch (error) {
     console.error(error);
-    m.reply("Link not valid");
+    m.reply("Link not valid or failed to fetch data.");
   }
 };
 
-// Simplified URL validation function
+// Simplified URL validation function (not currently used, but can be useful if you want to check URLs more generically)
 function isUrl(text) {
   try {
     new URL(text);
@@ -73,6 +80,7 @@ function isUrl(text) {
   }
 }
 
+// Command and tags configuration for the handler
 handler.help = ['inspect', 'getch', 'getinfochannel', 'getchid'];
 handler.tags = ['info'];
 handler.command = /^(inspect|getch|getinfochannel|getchid)$/i;
