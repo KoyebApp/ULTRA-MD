@@ -37,14 +37,10 @@ let handler = async (m, { conn, text, command }) => {
       return m.reply("Link not valid");
     }
 
-    // Ensure the newsletterMetadata method exists
-    if (typeof conn.newsletterMetadata !== 'function') {
-      return m.reply("The method 'newsletterMetadata' is not available.");
-    }
+    // Make an HTTP request to fetch metadata for the channel
+    const response = await fetch(`https://api.whatsapp.com/channel/${result}/metadata`);
+    const data = await response.json();
 
-    // Fetch metadata for the channel using the result (channel ID)
-    let data = await conn.newsletterMetadata("invite", result);
-    
     // If data is not fetched, return a failure message
     if (!data) {
       return m.reply("Failed to fetch channel info, please check the link.");
