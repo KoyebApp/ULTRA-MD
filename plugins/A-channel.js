@@ -1,21 +1,16 @@
+//Jangan Lupa Masukkan Ke Package Ini "@Awafff/RerezOfficial": "github:Awafff/XyrezzNotSepuh"
+//Ganti Baileys Kalau Mau Makai Ini Atau Gw Gk Tau Udh Support Di Whiskeysockets Atau Belum. 
 let handler = async (m, { conn, text, command }) => {
-  // If no text is provided, show usage instructions
-  if (!text) return m.reply(`Usage: ${prefix + command} *linkchannel*`);
-
-  // Check if the URL starts with 'https://whatsapp.com/channel/'
-  if (!text.startsWith('https://whatsapp.com/channel/')) {
-    return m.reply("Link not valid");
-  }
-
-  // React with a loading emoji to indicate the bot is processing the request
+  if (!text) return m.reply(`Kirim perintah ${prefix + command} _linkchannel_`);
+  if (!isUrl(text) && !text.includes('whatsapp.com/channel')) return m.reply("Link tidak valid");
+  
   await conn.sendMessage(m.chat, {
     react: {
-      text: "⏳",
+      text: "⏱️",
       key: m.key,
     }
   });
 
-  // Function to format the date from a timestamp
   function formatDate(timestamp) {
     const date = new Date(timestamp * 1000);
     const months = [
@@ -29,41 +24,9 @@ let handler = async (m, { conn, text, command }) => {
   }
 
   try {
-    // Extract the channel ID from the URL by splitting the string after 'https://whatsapp.com/channel/'
     let result = text.split('https://whatsapp.com/channel/')[1];
-
-    // Ensure the result (channel ID) is not empty
-    if (!result) {
-      return m.reply("Link not valid");
-    }
-
-    // Make an HTTP request to fetch metadata for the channel
-    const response = await fetch(`https://api.whatsapp.com/channel/${result}/metadata`);
-
-    // Check if the response is successful (HTTP status 200)
-    if (!response.ok) {
-      return m.reply("Failed to fetch data. Status: " + response.status);
-    }
-
-    // Log the raw response for debugging purposes
-    const rawResponse = await response.text();
-    console.log("Raw Response: ", rawResponse);
-
-    // Check if the response is HTML (it starts with <!DOCTYPE html>)
-    if (rawResponse.startsWith('<!DOCTYPE html>')) {
-      return m.reply("Received an HTML response, possibly an error page. Please check the link.");
-    }
-
-    // Parse the JSON response
-    const data = JSON.parse(rawResponse);
-
-    // If data is not fetched, return a failure message
-    if (!data) {
-      return m.reply("Failed to fetch channel info, please check the link.");
-    }
-
-    // Format the response text with the channel's info
-    let teks = `*□ NEWSLETTER INFO*
+    let data = await cioBotz.newsletterMetadata("invite", result);
+    let teks = `*乂 NEWSLETTER INFO*
 
 *Name:* ${data.name}
 *ID*: ${data.id}
@@ -73,26 +36,14 @@ let handler = async (m, { conn, text, command }) => {
 *Meta Verify*: ${data.verification}
 *React Emoji:* ${data.reaction_codes}
 *Description*:
-${data.description || 'No description available'}
+${data.description}
     `;
     m.reply(teks);
   } catch (error) {
-    console.error(error);
-    m.reply("Link not valid or failed to fetch data.");
+    m.reply("Link tidak valid");
   }
 };
 
-// Simplified URL validation function (not currently used, but can be useful if you want to check URLs more generically)
-function isUrl(text) {
-  try {
-    new URL(text);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Command and tags configuration for the handler
 handler.help = ['inspect', 'getch', 'getinfochannel', 'getchid'];
 handler.tags = ['info'];
 handler.command = /^(inspect|getch|getinfochannel|getchid)$/i;
