@@ -1,18 +1,9 @@
 let handler = async (m, { conn, text, command }) => {
-  // Check if the text is provided
-  if (!text) return m.reply(`Usage ${prefix + command} *linkchannel*`);
+  if (!text) return m.reply(`Usage: ${prefix + command} *linkchannel*`);
+  
+  // Validate the URL
+  if (!isUrl(text) || !text.includes('whatsapp.com/channel')) return m.reply("Link not valid");
 
-  // Check if the text is a valid URL or contains the required substring
-  function isUrl(str) {
-  const pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
-    '((([A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?\\.)+[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|\\[?[A-F0-9]*:[A-F0-9]*\\]?)' + // domain name and IP
-    '(\\:[0-9]+)?' + // port
-    '(\\/[-A-Z0-9+&@#/%=~_|$?!,;]*[^\\.,;\\s])?', 'i'); // path and query string
-  return pattern.test(str);
-  }
-  
-  if (!isUrl(text) && !text.includes('whatsapp.com/channel')) return m.reply("Link not valid");
-  
   await conn.sendMessage(m.chat, {
     react: {
       text: "⏳",
@@ -35,6 +26,11 @@ let handler = async (m, { conn, text, command }) => {
   try {
     let result = text.split('https://whatsapp.com/channel/')[1];
     let data = await cioBotz.newsletterMetadata("invite", result);
+    
+    if (!data) {
+      return m.reply("Failed to fetch channel info, please check the link.");
+    }
+
     let teks = `*□ NEWSLETTER INFO*
 
 *Name:* ${data.name}
@@ -45,13 +41,20 @@ let handler = async (m, { conn, text, command }) => {
 *Meta Verify*: ${data.verification}
 *React Emoji:* ${data.reaction_codes}
 *Description*:
-${data.description}
+${data.description || 'No description available'}
     `;
     m.reply(teks);
   } catch (error) {
+    console.error(error);
     m.reply("Link not valid");
   }
 };
+
+// Helper function to validate URL
+function isUrl(text) {
+  const regex = /^(https?:\/\/)[^\s$.?#].[^\s]*$/i;
+  return regex.test(text);
+}
 
 handler.help = ['inspect', 'getch', 'getinfochannel', 'getchid'];
 handler.tags = ['info'];
