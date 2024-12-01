@@ -62,7 +62,7 @@ async function modCombo(apk) {
 
 handler.help = ['modapk'];
 handler.tags = ['search'];
-handler.command = /^(modapk)$/i;
+handler.command = /^(mod|apk)$/i;
 handler.group = false;
 
 export default handler;
