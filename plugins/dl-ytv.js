@@ -15,13 +15,34 @@ let handler = async (m, { conn, args, isPrems, isOwner, usedPrefix, command }) =
   if (!args[0].match(/youtu/gi)) throw `❎ Verify that the YouTube link`;
   await m.react('⏳');
 
-  const videoDetails = await ytddl(args[0]);
+  // Convert Shorts URLs to regular YouTube URLs
+  let videoURL = args[0];
+  if (videoURL.includes("youtube.com/shorts/")) {
+    // Extract the video ID and create a regular YouTube URL
+    const videoID = videoURL.split('/shorts/')[1].split('?')[0];
+    videoURL = `https://www.youtube.com/watch?v=${videoID}`;
+  }
+
+  const videoDetails = await ytddl(videoURL);
   if (!videoDetails) throw `❎ Error downloading video`;
 
   const { url, title, author, description } = videoDetails;
 
-  // Use a readable stream instead of downloading the entire video into memory
+  // Log the URL to ensure it's correct
+  console.log("Video URL:", url);
+
+  // Validate if the URL is a valid stream URL
+  if (!url || !url.startsWith('http')) {
+    throw `❎ Invalid video URL or stream not available`;
+  }
+
+  // Use a readable stream for better handling of large files
   const videoStream = ytdl(url, { quality: 'highest', filter: 'audioandvideo' });
+
+  // Check if the videoStream is valid
+  if (!(videoStream instanceof Readable)) {
+    throw `❎ Unable to fetch the video stream properly`;
+  }
 
   const caption = `✼ ••๑⋯❀ Y O U T U B E ❀⋯⋅๑•• ✼
 	  
@@ -45,11 +66,17 @@ export default handler;
 
 async function ytddl(url) {
   try {
+    // Fetch the video info
     const yt = await ytdl.getInfo(url);
+    
+    // Choose the highest quality video stream
     const link = ytdl.chooseFormat(yt.formats, { quality: 'highest', filter: 'audioandvideo' });
 
+    // Log the chosen format URL
+    console.log("Chosen Format URL:", link.url);
+
     return {
-      url: link.url,
+      url: link.url,  // Return the URL for the video stream
       title: yt.videoDetails.title,
       author: yt.videoDetails.author.name,
       description: yt.videoDetails.description,
