@@ -26,15 +26,13 @@ const handler = async (message, { conn, args }) => {
     let mediaData = await tikdown(url);
     console.log('Media Data:', mediaData);
 
-    // Destructure the video URL from the fetched media data
-    const { videoUrl } = mediaData.data;
-
-    // If no video URL is found, throw an error
-    if (!videoUrl) {
+    // Check if the media data has a valid video URL
+    if (!mediaData.data || !mediaData.data.video) {
       throw new Error('Could not fetch the video URL');
     }
 
-    console.log('Download URL:', videoUrl);
+    const videoUrl = mediaData.data.video;
+    console.log('Video URL:', videoUrl);
 
     // Fetch the media content from the download URL
     const response = await fetch(videoUrl);
