@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import pkg from 'nayan-video-downloader';
-const { pinterest } = pkg;
+const { pintarest } = pkg; // Corrected import for Pinterest
 
 const fetchWithRetry = async (url, options, retries = 3) => {
   for (let i = 0; i < retries; i++) {
@@ -14,8 +14,8 @@ const fetchWithRetry = async (url, options, retries = 3) => {
 const handler = async (m, { conn, args }) => {
   if (!args[0]) throw '✳️ Enter the Pinterest link next to the command';
 
-  // Updated regex to capture both pinterest.com and pin.it links
-  const pinterestRegex = /^(https?:\/\/)?(www\.)?(pinterest\.com\/pin\/\d+|pin\.it\/[A-Za-z0-9]+)/i;
+  // Updated regex to capture Pinterest link format
+  const pinterestRegex = /^(https?:\/\/)?(www\.)?(pin\.it\/[A-Za-z0-9]+)$/;
 
   if (!args[0].match(pinterestRegex)) {
     throw '❌ Link incorrect. Please ensure it is a valid Pinterest pin link.';
@@ -27,8 +27,8 @@ const handler = async (m, { conn, args }) => {
     const url = args[0];
     console.log('Checking link:', url);
 
-    // Fetch media data using nayan-video-downloader
-    let mediaData = await pinterest(url);
+    // Use the pintarest function from the nayan-video-downloader package
+    const mediaData = await pintarest(url);
     console.log('Media Data:', mediaData);
 
     if (!mediaData.status) {
@@ -78,8 +78,8 @@ const handler = async (m, { conn, args }) => {
   }
 };
 
-handler.help = ['pinterest', 'pin', 'pindl', 'pinterestdl', 'pinimage', 'pindownload'];
+handler.help = ['pinterest', 'pin', 'pindownload'];
 handler.tags = ['downloader'];
-handler.command = ['pinterest', 'pin', 'pindl', 'pinterestdl', 'pinimage', 'pindownload'];
+handler.command = ['pinterest', 'pin', 'pindownload'];
 
 export default handler;
