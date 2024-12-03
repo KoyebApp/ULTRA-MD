@@ -1,4 +1,4 @@
-import { tikdown } from 'nayan-media-downloader';
+import { tikdown } from 'nayan-video-downloader';
 
 // Handler function for TikTok downloader
 let handler = async (message, { conn, text, args, usedPrefix, command }) => {
