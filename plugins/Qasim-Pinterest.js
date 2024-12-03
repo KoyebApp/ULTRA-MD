@@ -4,11 +4,15 @@ const { pintarest } = pkg; // Corrected import for Pinterest
 
 const fetchWithRetry = async (url, options, retries = 3) => {
   for (let i = 0; i < retries; i++) {
-    const response = await fetch(url, options);
-    if (response.ok) return response;
-    console.log(`Retrying... (${i + 1})`);
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      console.log(`Retrying... (${i + 1})`);
+    } catch (error) {
+      console.log(`Fetch attempt ${i + 1} failed:`, error.message);
+      if (i === retries - 1) throw new Error('Failed to fetch media content after retries');
+    }
   }
-  throw new Error('Failed to fetch media content after retries');
 };
 
 const handler = async (m, { conn, args }) => {
