@@ -1,6 +1,6 @@
 import { tikdown } from 'nayan-media-downloader';
 
-// Handler function for downloading TikTok video
+// Handler function for TikTok downloader
 let handler = async (message, { conn, text, args, usedPrefix, command }) => {
   // Define user-friendly error messages
   const errorMessages = {
@@ -9,43 +9,49 @@ let handler = async (message, { conn, text, args, usedPrefix, command }) => {
     fetchingError: 'Error fetching video. Please try again later.'
   };
 
-  // Check if URL is provided
+  // If no argument is passed, try to extract the URL from the message text
   if (!args[0] && message.text) {
-    args[0] = message.text; // If no URL provided, take it from the message text
+    args[0] = message.text.split(' ')[1]; // Extract the URL from the message if not in args
   }
 
-  // Validate the URL (it should contain "tiktok")
-  if (!args[0] || !args[0].match(/tiktok/gi)) {
+  // If no URL is provided, return an error
+  if (!args[0]) {
+    throw errorMessages.missingUrl;
+  }
+
+  // Validate the TikTok URL using a regex
+  const tiktokUrlPattern = /(?:https?:\/\/(?:www\.)?)?(?:tiktok\.com\/(?:[@a-zA-Z0-9_]+\/)?v\/(\d+)|(?:t\.co\/[a-zA-Z0-9]+))/i;
+  if (!args[0].match(tiktokUrlPattern)) {
     throw errorMessages.invalidUrl;
   }
 
-  // Show a loading emoji while fetching
+  // React with a loading emoji while fetching the video
   message.react('⏳');
 
   try {
-    // Fetch the TikTok video data using the URL
+    // Fetch the TikTok video using the TikTok URL
     const { data } = await tikdown(args[0]);
-    const videoUrl = data.videoUrl;
+    const videoUrl = data.videoUrl; // The video URL from the response
 
-    // Check if the video URL exists
+    // Check if video URL exists
     if (!videoUrl) {
       throw new Error(errorMessages.fetchingError);
     }
 
-    // Send the video file to the user
+    // Send the video to the user
     await conn.sendFile(message.chat, videoUrl, 'tiktok.mp4', 'Here is your TikTok video!', message);
-    message.react('✅'); // Success
+    message.react('✅'); // Success emoji
 
   } catch (error) {
     console.error(error);
-    await message.reply(errorMessages.fetchingError); // Send error message to the user
-    message.react('❌'); // Failure
+    await message.reply(errorMessages.fetchingError); // Send error message
+    message.react('❌'); // Failure emoji
   }
 };
 
-// Command metadata and regex
+// Command metadata
 handler.help = ['tiktok', 'tikdown', 'tiktokdownloader'];
 handler.tags = ['downloader'];
-handler.command = ['tiktok', 'tikdown', 'tiktokdownloader'];
+handler.command = ['tiktok', 'tikdown', 'tiktokdownloader']; // Commands this handler responds to
 
 export default handler;
