@@ -71,28 +71,33 @@ const handler = async (m, { conn, args }) => {
     } else if (mediaData.type === 'image') {
       // Handle image
       const imageUrl = mediaData.thumbnail || mediaData.url;
-      const response = await fetchWithRetry(imageUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*'
+      try {
+        const response = await fetchWithRetry(imageUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*'
+          }
+        });
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('image')) {
+          throw new Error('Invalid content type received for image');
         }
-      });
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('image')) {
-        throw new Error('Invalid content type received for image');
+        const arrayBuffer = await response.arrayBuffer();
+        const mediaBuffer = Buffer.from(arrayBuffer);
+
+        if (mediaBuffer.length === 0) throw new Error('Downloaded image is empty');
+
+        const fileName = mediaData.title ? `${mediaData.title}.jpg` : 'media.jpg';
+        const mimetype = 'image/jpeg';
+
+        await conn.sendFile(m.chat, mediaBuffer, fileName, 'Here is your downloaded image', m, false, { mimetype });
+        m.react('✅');
+      } catch (error) {
+        console.error("Error fetching or processing image:", error.message);
+        throw new Error('Failed to fetch or process image');
       }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const mediaBuffer = Buffer.from(arrayBuffer);
-
-      if (mediaBuffer.length === 0) throw new Error('Downloaded image is empty');
-
-      const fileName = mediaData.title ? `${mediaData.title}.jpg` : 'media.jpg';
-      const mimetype = 'image/jpeg';
-
-      await conn.sendFile(m.chat, mediaBuffer, fileName, 'Here is your downloaded image', m, false, { mimetype });
-      m.react('✅');
     } else {
       throw new Error('Unknown media type');
     }
@@ -102,6 +107,11 @@ const handler = async (m, { conn, args }) => {
     m.react('❌');
   }
 };
+
+// Global handler for unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 handler.help = ['pinterest', 'pin'];
 handler.tags = ['downloader'];
