@@ -1,57 +1,67 @@
-import { tikdown } from 'nayan-video-downloader';
+import fetch from 'node-fetch';
+import pkg from 'nayan-video-downloader';
+const { tikdown } = pkg;
 
-// Handler function for TikTok downloader
-let handler = async (message, { conn, text, args, usedPrefix, command }) => {
-  // Define user-friendly error messages
-  const errorMessages = {
-    missingUrl: 'Please provide a valid TikTok URL.',
-    invalidUrl: 'The URL provided is not a valid TikTok URL.',
-    fetchingError: 'Error fetching video. Please try again later.'
-  };
-
-  // If no argument is passed, try to extract the URL from the message text
-  if (!args[0] && message.text) {
-    args[0] = message.text.split(' ')[1]; // Extract the URL from the message if not in args
-  }
-
-  // If no URL is provided, return an error
+const handler = async (message, { conn, args }) => {
+  // Check if the URL is provided in the command arguments
   if (!args[0]) {
-    throw errorMessages.missingUrl;
+    throw '✳️ Enter the TikTok link next to the command';
   }
 
-  // Validate the TikTok URL using a regex
-  const tiktokUrlPattern = /(?:https?:\/\/(?:www\.)?)?(?:tiktok\.com\/(?:[@a-zA-Z0-9_]+\/)?v\/(\d+)|(?:t\.co\/[a-zA-Z0-9]+))/i;
-  if (!args[0].match(tiktokUrlPattern)) {
-    throw errorMessages.invalidUrl;
+  // Validate the URL format for TikTok
+  const urlPattern = /(?:https?:\/\/(?:www\.)?)?tiktok\.com\/(?:[@a-zA-Z0-9_]+\/)?v\/(\d+)/gi;
+  if (!args[0].match(urlPattern)) {
+    throw '❌ Invalid TikTok link';
   }
 
-  // React with a loading emoji while fetching the video
+  // React with a loading emoji to show the process has started
   message.react('⏳');
 
   try {
-    // Fetch the TikTok video using the TikTok URL
-    const { data } = await tikdown(args[0]);
-    const videoUrl = data.videoUrl; // The video URL from the response
+    // The URL of the TikTok video
+    const url = args[0];
+    console.log('URL:', url);
 
-    // Check if video URL exists
+    // Fetch media data using the nayan-video-downloader package
+    let mediaData = await tikdown(url);
+    console.log('Media Data:', mediaData);
+
+    // Destructure the video URL from the fetched media data
+    const { videoUrl } = mediaData.data;
+
+    // If no video URL is found, throw an error
     if (!videoUrl) {
-      throw new Error(errorMessages.fetchingError);
+      throw new Error('Could not fetch the video URL');
     }
 
-    // Send the video to the user
-    await conn.sendFile(message.chat, videoUrl, 'tiktok.mp4', 'Here is your TikTok video!', message);
-    message.react('✅'); // Success emoji
+    console.log('Download URL:', videoUrl);
 
+    // Fetch the media content from the download URL
+    const response = await fetch(videoUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch the media content');
+    }
+
+    // Convert the response to an array buffer
+    const arrayBuffer = await response.arrayBuffer();
+    const mediaBuffer = Buffer.from(arrayBuffer);
+
+    // Send the video file to the user
+    await conn.sendFile(message.chat, mediaBuffer, 'tiktok.mp4', 'Here is your TikTok video', message, false, { mimetype: 'video/mp4' });
+
+    // React with a success emoji
+    message.react('✅');
   } catch (error) {
-    console.error(error);
-    await message.reply(errorMessages.fetchingError); // Send error message
-    message.react('❌'); // Failure emoji
+    // Log and handle any errors
+    console.error('Error downloading from TikTok:', error.message, error.stack);
+    await message.reply('⚠️ An error occurred while processing the request. Please try again later.');
+    message.react('❌');
   }
 };
 
-// Command metadata
-handler.help = ['tiktok', 'tikdown', 'tiktokdownloader'];
+// Define command metadata
+handler.help = ['tiktok <url>'];
 handler.tags = ['downloader'];
-handler.command = ['tiktok', 'tikdown', 'tiktokdownloader']; // Commands this handler responds to
+handler.command = ['tiktok'];
 
 export default handler;
