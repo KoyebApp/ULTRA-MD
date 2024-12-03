@@ -4,6 +4,7 @@ import ytdl from 'youtubedl-core';
 import { Client } from 'undici';
 import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
+import { Readable } from 'stream';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,15 +13,15 @@ let handler = async (m, { conn, args, isPrems, isOwner, usedPrefix, command }) =
   let chat = global.db.data.chats[m.chat];
   if (!args || !args[0]) throw `✳️ Example:\n${usedPrefix + command} https://youtu.be/YzkTFFwxtXI`;
   if (!args[0].match(/youtu/gi)) throw `❎ Verify that the YouTube link`;
-  await m.react('⏳')
+  await m.react('⏳');
 
   const videoDetails = await ytddl(args[0]);
   if (!videoDetails) throw `❎ Error downloading video`;
 
   const { url, title, author, description } = videoDetails;
 
-  const response = await fetch(url);
-  const data = await response.buffer();
+  // Use a readable stream instead of downloading the entire video into memory
+  const videoStream = ytdl(url, { quality: 'highest', filter: 'audioandvideo' });
 
   const caption = `✼ ••๑⋯❀ Y O U T U B E ❀⋯⋅๑•• ✼
 	  
@@ -30,10 +31,10 @@ let handler = async (m, { conn, args, isPrems, isOwner, usedPrefix, command }) =
 ❒ Link: ${args[0]}
 ⊱─━⊱༻●༺⊰━─⊰`;
 
-  conn.sendFile(m.chat, data, `${title || 'video'}.mp4`, caption, m, false, { asDocument: chat.useDocument });
-  await m.react('✅')
+  // Send the video as a stream
+  conn.sendFile(m.chat, videoStream, `${title || 'video'}.mp4`, caption, m, false, { asDocument: chat.useDocument });
+  await m.react('✅');
 };
-
 
 handler.help = ['ytmp4 <yt-link>'];
 handler.tags = ['downloader'];
@@ -42,27 +43,9 @@ handler.diamond = false;
 
 export default handler;
 
-async function getCookies() {
-  const cookiesPath = path.resolve(__dirname, '../assets/cookies.json');
-  if (!fs.existsSync(cookiesPath)) {
-    throw new Error('Cookies file not found');
-  }
-  return JSON.parse(fs.readFileSync(cookiesPath, 'utf-8'));
-}
-
-async function createClient() {
-  const cookies = await getCookies();
-  return new Client("https://www.youtube.com", {
-    headers: {
-      "Cookie": cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
-    }
-  });
-}
-
 async function ytddl(url) {
   try {
-    const client = await createClient();
-    const yt = await ytdl.getInfo(url, { requestOptions: { client: client } });
+    const yt = await ytdl.getInfo(url);
     const link = ytdl.chooseFormat(yt.formats, { quality: 'highest', filter: 'audioandvideo' });
 
     return {
@@ -76,4 +59,3 @@ async function ytddl(url) {
     return null;  // Ensure a null is returned on error
   }
 }
-
