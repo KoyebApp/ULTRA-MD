@@ -4,6 +4,8 @@ const { pintarest } = pkg;
 
 const handler = async (m, { conn, args }) => {
   if (!args[0]) throw `✳️ Enter the Pinterest link next to the command`;
+  
+  // Validate Pinterest URL
   if (!args[0].match(/(pinterest\.com\/pin\/|pin\.it\/)/gi)) throw `❌ Link incorrect`;
   m.react('⏳');
 
@@ -14,6 +16,11 @@ const handler = async (m, { conn, args }) => {
     // Fetch media data using nayan-media-downloader
     let mediaData = await pintarest(url);
     console.log('Media Data:', mediaData); // Debug log for media data
+
+    // Check if the mediaData is valid
+    if (!mediaData || !mediaData.url || !mediaData.thumbnail) {
+      throw new Error('Invalid response from Pinterest downloader');
+    }
 
     // Check if it's a video or image based on type
     const downloadUrl = mediaData.type === 'video' ? mediaData.url : mediaData.thumbnail;
@@ -34,6 +41,7 @@ const handler = async (m, { conn, args }) => {
     await conn.sendFile(m.chat, mediaBuffer, fileName, `Here is your media`, m, false, { mimetype });
     m.react('✅');
   } catch (error) {
+    // Log and handle any errors
     console.error('Error downloading from Pinterest:', error.message, error.stack);
     await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
     m.react('❌');
