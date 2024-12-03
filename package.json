@@ -90,7 +90,7 @@
         "moment-timezone": "^0.5.37",
         "mongoose": "^7.4.1",
         "nayan-video-downloader": "*",
-        "nayan-media-downloader": "2.6.7",
+        "nayan-media-downloader": "*",
         "node-fetch": "^3.3.1",
         "node-gtts": "^2.0.2",
         "node-webpmux": "^3.1.3",
