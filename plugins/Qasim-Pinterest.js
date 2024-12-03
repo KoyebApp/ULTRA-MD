@@ -14,8 +14,8 @@ const fetchWithRetry = async (url, options, retries = 3) => {
 const handler = async (m, { conn, args }) => {
   if (!args[0]) throw '✳️ Enter the Pinterest link next to the command';
 
-  // Updated regex to capture Pinterest link formats
-  const pinterestRegex = /^(https?:\/\/)?(www\.)?(pinterest\.com\/pin\/\d+)/;
+  // Updated regex to capture both pinterest.com and pin.it links
+  const pinterestRegex = /^(https?:\/\/)?(www\.)?(pinterest\.com\/pin\/\d+|pin\.it\/[A-Za-z0-9]+)/i;
 
   if (!args[0].match(pinterestRegex)) {
     throw '❌ Link incorrect. Please ensure it is a valid Pinterest pin link.';
