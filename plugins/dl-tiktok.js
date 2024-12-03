@@ -8,8 +8,8 @@ const handler = async (message, { conn, args }) => {
     throw '✳️ Enter the TikTok link next to the command';
   }
 
-  // Validate the URL format for TikTok
-  const urlPattern = /(?:https?:\/\/(?:www\.)?)?tiktok\.com\/(?:[@a-zA-Z0-9_]+\/)?v\/(\d+)/gi;
+  // Validate the URL format for TikTok, including shortened URLs like vm.tiktok.com
+  const urlPattern = /(?:https?:\/\/(?:www\.)?)?(tiktok\.com\/(?:[^\/]+\/v\/\d+|[^\/]+\/post\/\d+)|vm\.tiktok\.com\/[\w\d]+)/gi;
   if (!args[0].match(urlPattern)) {
     throw '❌ Invalid TikTok link';
   }
