@@ -1,44 +1,63 @@
 import fetch from 'node-fetch';
-import pkg from 'nayan-video-downloader';
+import pkg from 'nayan-media-downloader';
 const { threads } = pkg;
 
-const handler = async (m, { conn, args }) => {
-  if (!args[0]) throw `✳️ Enter the Instagram Threads link next to the command`;
-  if (!args[0].match(/threads\.net\/(@[^\s\/]+\/post\/[^\s?]+)/gi)) throw `❌ Link incorrect`;
-  m.react('⏳');
+let handler = async (message, { conn, args }) => {
+  const errorMessages = {
+    URL_NOT_PROVIDED: 'You must provide a valid URL.',
+    URL_INVALID: 'Invalid URL. Please provide a correct URL.',
+    FETCH_ERROR: 'Error fetching media. Please try again later.',
+    DOWNLOAD_ERROR: 'Error downloading the media.',
+    DOWNLOAD_SUCCESS: 'Media successfully downloaded!',
+  };
 
+  if (!args[0]) {
+    throw new Error(errorMessages.URL_NOT_PROVIDED);
+  }
+
+  if (!args[0].match(/threads\.net\/(@[^\s\/]+\/post\/[^\s?]+)/gi)) {
+    throw new Error(errorMessages.URL_INVALID);
+  }
+
+  message.reply('⏳');  // Indicating that the download process is starting
   try {
-    const url = args[0];
-    console.log('URL:', url); // Debug log for URL
+    const threadUrl = args[0];
+    console.log('Fetching media from:', threadUrl);
 
-    // Fetch media data using nayan-media-downloader
-    let mediaData = await threads(url);
-    console.log('Media Data:', mediaData); // Debug log for media data
+    const mediaData = await fetch(threads, threadUrl); // Get media data
+    console.log('Media data received:', mediaData);
 
-    const { video, image } = mediaData.data; // Correctly extract the video or image URL
-    const downloadUrl = video || image; // Use video if available, else use image
-    if (!downloadUrl) throw new Error('Could not fetch the download URL');
+    const { video, image } = mediaData;
+    const mediaUrl = video || image; // If video exists, use video, otherwise use image
 
-    console.log('Download URL:', downloadUrl); // Debug log for download URL
+    if (!mediaUrl) {
+      throw new Error(errorMessages.FETCH_ERROR);
+    }
 
-    const response = await fetch(downloadUrl);
-    if (!response.ok) throw new Error('Failed to fetch the media content');
-    const arrayBuffer = await response.arrayBuffer();
-    const mediaBuffer = Buffer.from(arrayBuffer);
+    console.log('Media URL:', mediaUrl);
 
-    const fileName = video ? 'media.mp4' : 'media.jpg';
-    const mimetype = video ? 'video/mp4' : 'image/jpeg';
-    await conn.sendFile(m.chat, mediaBuffer, fileName, `Here is your media`, m, false, { mimetype });
-    m.react('✅');
+    const mediaResponse = await fetch(mediaUrl);
+    if (!mediaResponse.ok) {
+      throw new Error(errorMessages.DOWNLOAD_ERROR);
+    }
+
+    const buffer = await mediaResponse.buffer();
+    const mimeType = video ? 'video/mp4' : 'image/jpeg';
+    
+    await conn.sendFile(message.chat, buffer, 'media', 'Download Media', message, false, {
+      mimetype: mimeType,
+    });
+
+    message.reply('✅');  // Indicating that the media download was successful
   } catch (error) {
-    console.error('Error downloading from Instagram Threads:', error.message, error.stack);
-    await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
-    m.react('❌');
+    console.error('Error:', error);
+    await message.reply(errorMessages.FETCH_ERROR);
+    message.reply('❌');  // Indicating that the media download failed
   }
 };
 
-handler.help = ['threads <url>'];
-handler.tags = ['downloader'];
-handler.command = ['threads'];
+handler.help = ['threads'];
+handler.command = ['download'];
+handler.tags = ['threads'];
 
 export default handler;
