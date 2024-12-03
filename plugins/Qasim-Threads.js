@@ -2,62 +2,71 @@ import fetch from 'node-fetch';
 import pkg from 'nayan-video-downloader';
 const { threads } = pkg;
 
-let handler = async (message, { conn, args }) => {
-  const errorMessages = {
-    URL_NOT_PROVIDED: 'You must provide a valid URL.',
-    URL_INVALID: 'Invalid URL. Please provide a correct URL.',
-    FETCH_ERROR: 'Error fetching media. Please try again later.',
-    DOWNLOAD_ERROR: 'Error downloading the media.',
-    DOWNLOAD_SUCCESS: 'Media successfully downloaded!',
-  };
-
+const handler = async (message, { conn, args }) => {
+  // Check if the URL is provided in the command arguments
   if (!args[0]) {
-    throw new Error(errorMessages.URL_NOT_PROVIDED);
+    throw '✳️ Enter the Instagram Threads link next to the command';
   }
 
-  if (!args[0].match(/threads\.net\/(@[^\s\/]+\/post\/[^\s?]+)/gi)) {
-    throw new Error(errorMessages.URL_INVALID);
+  // Validate the URL format for Instagram Threads
+  const urlPattern = /threads\.net\/(@[^\s\/]+\/post\/[^\s?]+)/gi;
+  if (!args[0].match(urlPattern)) {
+    throw '❌ Link incorrect';
   }
 
-  message.reply('⏳');  // Indicating that the download process is starting
+  // React with a loading emoji to show the process has started
+  message.react('⏳');
+
   try {
-    const threadUrl = args[0];
-    console.log('Fetching media from:', threadUrl);
+    // The URL of the Instagram thread
+    const url = args[0];
+    console.log('URL:', url);
 
-    const mediaData = await fetch(threads, threadUrl); // Get media data
-    console.log('Media data received:', mediaData);
+    // Fetch media data using the nayan-media-downloader package
+    let mediaData = await threads(url);
+    console.log('Media Data:', mediaData);
 
-    const { video, image } = mediaData;
-    const mediaUrl = video || image; // If video exists, use video, otherwise use image
+    // Destructure the video and image URLs from the fetched media data
+    const { video, image } = mediaData.data;
+    const downloadUrl = video || image; // Prioritize video if available
 
-    if (!mediaUrl) {
-      throw new Error(errorMessages.FETCH_ERROR);
+    // If no media URL is found, throw an error
+    if (!downloadUrl) {
+      throw new Error('Could not fetch the media URL');
     }
 
-    console.log('Media URL:', mediaUrl);
+    console.log('Download URL:', downloadUrl);
 
-    const mediaResponse = await fetch(mediaUrl);
-    if (!mediaResponse.ok) {
-      throw new Error(errorMessages.DOWNLOAD_ERROR);
+    // Fetch the media content from the download URL
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error('Failed to fetch the media content');
     }
 
-    const buffer = await mediaResponse.buffer();
+    // Convert the response to an array buffer
+    const arrayBuffer = await response.arrayBuffer();
+    const mediaBuffer = Buffer.from(arrayBuffer);
+
+    // Determine the file name and MIME type based on whether it's a video or image
+    const fileName = video ? 'media.mp4' : 'media.jpg';
     const mimeType = video ? 'video/mp4' : 'image/jpeg';
-    
-    await conn.sendFile(message.chat, buffer, 'media', 'Download Media', message, false, {
-      mimetype: mimeType,
-    });
 
-    message.reply('✅');  // Indicating that the media download was successful
+    // Send the media file to the user
+    await conn.sendFile(message.chat, mediaBuffer, fileName, 'Here is your media', message, false, { mimetype: mimeType });
+
+    // React with a success emoji
+    message.react('✅');
   } catch (error) {
-    console.error('Error:', error);
-    await message.reply(errorMessages.FETCH_ERROR);
-    message.reply('❌');  // Indicating that the media download failed
+    // Log and handle any errors
+    console.error('Error downloading from Instagram Threads:', error.message, error.stack);
+    await message.reply('⚠️ An error occurred while processing the request. Please try again later.');
+    message.react('❌');
   }
 };
 
-handler.help = ['threads'];
-handler.command = ['download'];
-handler.tags = ['threads'];
+// Define command metadata
+handler.help = ['threads <url>'];
+handler.tags = ['downloader'];
+handler.command = ['threads'];
 
 export default handler;
