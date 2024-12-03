@@ -1,84 +1,79 @@
+import fs from 'fs';
+import path from 'path';
+import ytdl from 'youtubedl-core';
+import { Client } from 'undici';
+import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
-import pkg from 'nayan-video-downloader';
-const { ytdown } = pkg;
 
-const fetchWithRetry = async (url, options, retries = 3) => {
-    for (let i = 0; i < retries; i++) {
-        const response = await fetch(url, options);
-        if (response.ok) return response;
-        console.log(`Retrying... (${i + 1})`);
-    }
-    throw new Error('Failed to fetch media content after retries');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let handler = async (m, { conn, args, isPrems, isOwner, usedPrefix, command }) => {
+  let chat = global.db.data.chats[m.chat];
+  if (!args || !args[0]) throw `✳️ Example:\n${usedPrefix + command} https://youtu.be/YzkTFFwxtXI`;
+  if (!args[0].match(/youtu/gi)) throw `❎ Verify that the YouTube link`;
+  await m.react('⏳')
+
+  const videoDetails = await ytddl(args[0]);
+  if (!videoDetails) throw `❎ Error downloading video`;
+
+  const { url, title, author, description } = videoDetails;
+
+  const response = await fetch(url);
+  const data = await response.buffer();
+
+  const caption = `✼ ••๑⋯❀ Y O U T U B E ❀⋯⋅๑•• ✼
+	  
+❏ Title: ${title || 'Unknown'}
+❒ Author: ${author || 'Unknown'}
+❒ Description: ${description || 'No description available'}
+❒ Link: ${args[0]}
+⊱─━⊱༻●༺⊰━─⊰`;
+
+  conn.sendFile(m.chat, data, `${title || 'video'}.mp4`, caption, m, false, { asDocument: chat.useDocument });
+  await m.react('✅')
 };
 
-const handler = async (m, { args, conn, usedprefix }) => {
-    // Check if a URL was provided
-    if (!args.length) {
-        await m.reply('Please provide a YouTube URL.');
-        return;
-    }
 
-    const url = args.join(' '); // Join arguments to handle spaces in URLs
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
-
-    // Validate the URL format
-    if (!youtubeRegex.test(url)) {
-        await m.react('❌'); // React with a cross emoji for invalid URL
-        await m.reply('Invalid YouTube URL. Please provide a valid URL.');
-        return;
-    }
-
-    await m.react('⏳'); // React with a loading emoji
-
-    try {
-        // Fetch video details with ytdown
-        const response = await ytdown(url);
-        console.log('API Response:', response); // Log the API response
-
-        if (!response || !response.data) {
-            throw new Error('Invalid response from the downloader.');
-        }
-
-        const videoUrl = response.data.video_hd; // Use HD URL
-        if (!videoUrl) {
-            throw new Error('HD video URL not found.');
-        }
-
-        const title = response.data.title || 'video';
-        const caption = `𝘗𝘖𝘞𝘌𝘙𝘌𝘋 𝘉𝘠 © 𝘜𝘓𝘛𝘙𝘈-𝘔𝘋`;
-
-        // Fetch the video file with retry
-        const mediaResponse = await fetchWithRetry(videoUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*'
-            }
-        });
-
-        const contentType = mediaResponse.headers.get('content-type');
-        if (!contentType || !contentType.includes('video')) {
-            throw new Error('Invalid content type received');
-        }
-
-        const arrayBuffer = await mediaResponse.arrayBuffer();
-        const mediaBuffer = Buffer.from(arrayBuffer);
-        if (mediaBuffer.length === 0) throw new Error('Downloaded file is empty');
-
-        // Send the video file
-        await conn.sendFile(m.chat, mediaBuffer, `null`, caption, m, false, {
-            mimetype: 'video/mp4'
-        });
-
-        await m.react('✅'); // React with a checkmark emoji for success
-    } catch (error) {
-        console.error('Error fetching video:', error.message, error.stack);
-        await m.reply('An error occurred while fetching the video. Please try again later.');
-        await m.react('❌'); // React with a cross emoji for errors
-    }
-};
-
-handler.help = ['ytmp4', 'ytv'];
-handler.tags = ['dl'];
-handler.command = ['ytmp4', 'ytv'];
+handler.help = ['ytmp4 <yt-link>'];
+handler.tags = ['downloader'];
+handler.command = ['ytmp4', 'video', 'ytv'];
+handler.diamond = false;
 
 export default handler;
+
+async function getCookies() {
+  const cookiesPath = path.resolve(__dirname, '../assets/cookies.json');
+  if (!fs.existsSync(cookiesPath)) {
+    throw new Error('Cookies file not found');
+  }
+  return JSON.parse(fs.readFileSync(cookiesPath, 'utf-8'));
+}
+
+async function createClient() {
+  const cookies = await getCookies();
+  return new Client("https://www.youtube.com", {
+    headers: {
+      "Cookie": cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
+    }
+  });
+}
+
+async function ytddl(url) {
+  try {
+    const client = await createClient();
+    const yt = await ytdl.getInfo(url, { requestOptions: { client: client } });
+    const link = ytdl.chooseFormat(yt.formats, { quality: 'highest', filter: 'audioandvideo' });
+
+    return {
+      url: link.url,
+      title: yt.videoDetails.title,
+      author: yt.videoDetails.author.name,
+      description: yt.videoDetails.description,
+    };
+  } catch (error) {
+    console.error("An error occurred:", error);
+    return null;  // Ensure a null is returned on error
+  }
+}
+
