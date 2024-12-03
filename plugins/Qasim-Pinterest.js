@@ -35,29 +35,30 @@ const handler = async (m, { conn, args }) => {
     }
 
     // Ensure mediaData and the necessary properties exist before accessing them
-    if (!mediaData || !mediaData.url) {
-      throw new Error('Could not fetch the media download URL');
+    if (!mediaData || (!mediaData.url && !mediaData.thumbnail)) {
+      throw new Error('No valid media URL found');
     }
 
-    const downloadUrl = mediaData.url; // Get URL directly from mediaData
+    const mediaUrl = mediaData.url || mediaData.thumbnail; // Use thumbnail if URL is not available
+    console.log('Media URL:', mediaUrl);
 
-    console.log('Download URL:', downloadUrl);
-
-    // Check if the type is video or image
-    if (mediaData.type === 'video') {
-      // Handle video
-      const response = await fetchWithRetry(downloadUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*'
-        }
-      });
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('video')) {
-        throw new Error('Invalid content type received for video');
+    // Handle media based on its type (image or video)
+    const response = await fetchWithRetry(mediaUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
       }
+    });
 
+    const contentType = response.headers.get('content-type');
+    console.log('Content Type:', contentType);
+
+    if (!contentType) {
+      throw new Error('No content-type received');
+    }
+
+    // Handle video
+    if (contentType.includes('video')) {
       const arrayBuffer = await response.arrayBuffer();
       const mediaBuffer = Buffer.from(arrayBuffer);
 
@@ -68,39 +69,23 @@ const handler = async (m, { conn, args }) => {
 
       await conn.sendFile(m.chat, mediaBuffer, fileName, 'Here is your downloaded video', m, false, { mimetype });
       m.react('✅');
-    } else if (mediaData.type === 'image') {
-      // Handle image
-      const imageUrl = mediaData.thumbnail || mediaData.url;
-      try {
-        const response = await fetchWithRetry(imageUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-            'Accept': 'application/json, text/plain, */*'
-          }
-        });
+    } 
+    // Handle image
+    else if (contentType.includes('image')) {
+      const arrayBuffer = await response.arrayBuffer();
+      const mediaBuffer = Buffer.from(arrayBuffer);
 
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('image')) {
-          throw new Error('Invalid content type received for image');
-        }
+      if (mediaBuffer.length === 0) throw new Error('Downloaded image is empty');
 
-        const arrayBuffer = await response.arrayBuffer();
-        const mediaBuffer = Buffer.from(arrayBuffer);
+      const fileName = mediaData.title ? `${mediaData.title}.jpg` : 'media.jpg';
+      const mimetype = 'image/jpeg';
 
-        if (mediaBuffer.length === 0) throw new Error('Downloaded image is empty');
-
-        const fileName = mediaData.title ? `${mediaData.title}.jpg` : 'media.jpg';
-        const mimetype = 'image/jpeg';
-
-        await conn.sendFile(m.chat, mediaBuffer, fileName, 'Here is your downloaded image', m, false, { mimetype });
-        m.react('✅');
-      } catch (error) {
-        console.error("Error fetching or processing image:", error.message);
-        throw new Error('Failed to fetch or process image');
-      }
+      await conn.sendFile(m.chat, mediaBuffer, fileName, 'Here is your downloaded image', m, false, { mimetype });
+      m.react('✅');
     } else {
-      throw new Error('Unknown media type');
+      throw new Error('Unsupported media type');
     }
+
   } catch (error) {
     console.error('Error processing Pinterest download:', error.message);
     await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
