@@ -14,22 +14,39 @@ const handler = async (m, { conn, args }) => {
     console.log('URL:', url); // Debug log for URL
 
     // Fetch media data using nayan-media-downloader
-    let mediaData = await pintarest(url);
+    let mediaData;
+    try {
+      mediaData = await pintarest(url);
+    } catch (error) {
+      throw new Error('Error fetching data from Pinterest');
+    }
+    
     console.log('Media Data:', mediaData); // Debug log for media data
 
-    // Check if the mediaData is valid
+    // Validate the response format
     if (!mediaData || !mediaData.url || !mediaData.thumbnail) {
       throw new Error('Invalid response from Pinterest downloader');
     }
 
-    // Check if it's a video or image based on type
+    // Determine the download URL
     const downloadUrl = mediaData.type === 'video' ? mediaData.url : mediaData.thumbnail;
-    if (!downloadUrl) throw new Error('Could not fetch the download URL');
+    if (!downloadUrl) {
+      throw new Error('Could not fetch the download URL');
+    }
 
     console.log('Download URL:', downloadUrl); // Debug log for download URL
 
-    const response = await fetch(downloadUrl);
-    if (!response.ok) throw new Error('Failed to fetch the media content');
+    // Fetch the media content
+    let response;
+    try {
+      response = await fetch(downloadUrl);
+    } catch (error) {
+      throw new Error('Failed to fetch the media content');
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch the media content');
+    }
 
     const arrayBuffer = await response.arrayBuffer();
     const mediaBuffer = Buffer.from(arrayBuffer);
@@ -38,11 +55,12 @@ const handler = async (m, { conn, args }) => {
     const fileName = mediaData.type === 'video' ? 'media.mp4' : 'media.jpg';
     const mimetype = mediaData.type === 'video' ? 'video/mp4' : 'image/jpeg';
 
+    // Send the media to the user
     await conn.sendFile(m.chat, mediaBuffer, fileName, `Here is your media`, m, false, { mimetype });
     m.react('✅');
   } catch (error) {
-    // Log and handle any errors
-    console.error('Error downloading from Pinterest:', error.message, error.stack);
+    // Log the error and notify the user
+    console.error('Error:', error.message, error.stack);
     await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
     m.react('❌');
   }
