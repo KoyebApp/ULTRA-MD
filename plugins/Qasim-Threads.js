@@ -52,7 +52,7 @@ const handler = async (message, { conn, args }) => {
     const mimeType = video ? 'video/mp4' : 'image/jpeg';
 
     // Send the media file to the user
-    await conn.sendFile(message.chat, mediaBuffer, fileName, 'Here is your media', message, false, { mimetype: mimeType });
+    await conn.sendFile(message.chat, mediaBuffer, fileName, '*ᴾᴼᵂᴱᴿᴱᴰ ᴮʸ ᴳᴸᴼᴮᴬᴸᵀᴱᶜᴴᴵᴺᶠᴼ*', message, false, { mimetype: mimeType });
 
     // React with a success emoji
     message.react('✅');
