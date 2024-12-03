@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import pkg from 'nayan-media-downloader';
+import pkg from 'nayan-video-downloader';
 const { threads } = pkg;
 
 let handler = async (message, { conn, args }) => {
