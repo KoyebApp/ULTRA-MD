@@ -45,7 +45,7 @@ const handler = async (message, { conn, args }) => {
     const mediaBuffer = Buffer.from(arrayBuffer);
 
     // Send the video file to the user
-    await conn.sendFile(message.chat, mediaBuffer, 'tiktok.mp4', 'Here is your TikTok video', message, false, { mimetype: 'video/mp4' });
+    await conn.sendFile(message.chat, mediaBuffer, 'tiktok.mp4', '*𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 © 𝚄𝙻𝚃𝚁𝙰-𝙼𝙳*', message, false, { mimetype: 'video/mp4' });
 
     // React with a success emoji
     message.react('✅');
@@ -58,8 +58,8 @@ const handler = async (message, { conn, args }) => {
 };
 
 // Define command metadata
-handler.help = ['tiktok <url>'];
+handler.help = ['tiktok', 'tt', 'tikdown', 'ttdl'];
 handler.tags = ['downloader'];
-handler.command = ['tiktok'];
+handler.command = ['tiktok', 'tt', 'tikdown', 'ttdl'];
 
 export default handler;
