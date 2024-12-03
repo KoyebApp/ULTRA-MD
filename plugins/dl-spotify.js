@@ -1,4 +1,4 @@
-/*import fetch from 'node-fetch'
+import fetch from 'node-fetch'
 import displayLoadingScreen from '../lib/loading.js'
 let handler = async (m, { conn, text }) => {
   if (!text) {
@@ -9,10 +9,10 @@ let handler = async (m, { conn, text }) => {
   //await displayLoadingScreen(conn, m.chat)
   let pp = 'https://wallpapercave.com/wp/wp7932387.jpg'
   const query = encodeURIComponent(text)
-  let res = `https://api.guruapi.tech/spotifysearch?query=${query}`
+  let res = `https://global-tech-api.vercel.app/spotifysearch?query=${query}`
   let spurl = await fetch(res)
   spurl = await spurl.json()
-  let dlres = await fetch(`https://api.guruapi.tech/spotifydl?url=${spurl.data[0].url}`)
+  let dlres = await fetch(`https://global-tech-api.vercel.app/spotifydl?url=${spurl.data[0].url}`)
   dlres = await dlres.json()
   let sturl  = dlres.data.url
 
@@ -44,4 +44,4 @@ handler.help = ['spotify']
 handler.tags = ['downloader']
 handler.command = /^(spotify|song)$/i
 
-export default handler */
+export default handler
