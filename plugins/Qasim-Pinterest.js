@@ -1,73 +1,85 @@
 import fetch from 'node-fetch';
 import pkg from 'nayan-video-downloader';
-const { pintarest } = pkg;
+const { pinterest } = pkg;
+
+const fetchWithRetry = async (url, options, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    const response = await fetch(url, options);
+    if (response.ok) return response;
+    console.log(`Retrying... (${i + 1})`);
+  }
+  throw new Error('Failed to fetch media content after retries');
+};
 
 const handler = async (m, { conn, args }) => {
-  if (!args[0]) throw `✳️ Enter the Pinterest link next to the command`;
-  
-  // Validate Pinterest URL
-  if (!args[0].match(/(pinterest\.com\/pin\/|pin\.it\/)/gi)) throw `❌ Link incorrect`;
+  if (!args[0]) throw '✳️ Enter the Pinterest link next to the command';
+
+  // Updated regex to capture Pinterest link formats
+  const pinterestRegex = /^(https?:\/\/)?(www\.)?(pinterest\.com\/pin\/\d+)/;
+
+  if (!args[0].match(pinterestRegex)) {
+    throw '❌ Link incorrect. Please ensure it is a valid Pinterest pin link.';
+  }
+
   m.react('⏳');
 
   try {
     const url = args[0];
-    console.log('URL:', url); // Debug log for URL
+    console.log('Checking link:', url);
 
-    // Fetch media data using nayan-media-downloader
-    let mediaData;
-    try {
-      mediaData = await pintarest(url);
-    } catch (error) {
-      throw new Error('Error fetching data from Pinterest');
-    }
-    
-    console.log('Media Data:', mediaData); // Debug log for media data
+    // Fetch media data using nayan-video-downloader
+    let mediaData = await pinterest(url);
+    console.log('Media Data:', mediaData);
 
-    // Validate the response format
-    if (!mediaData || !mediaData.url || !mediaData.thumbnail) {
-      throw new Error('Invalid response from Pinterest downloader');
+    if (!mediaData.status) {
+      throw new Error(`Error: ${mediaData.msg || 'Failed to retrieve media data'}`);
     }
 
-    // Determine the download URL
-    const downloadUrl = mediaData.type === 'video' ? mediaData.url : mediaData.thumbnail;
-    if (!downloadUrl) {
+    let downloadUrl;
+    if (mediaData.data.video && mediaData.data.video.length > 0) {
+      downloadUrl = mediaData.data.video[0]; // Use the first video URL
+    } else if (mediaData.data.images && mediaData.data.images.length > 0) {
+      downloadUrl = mediaData.data.images[0]; // Use the first image URL
+    } else {
       throw new Error('Could not fetch the download URL');
     }
 
-    console.log('Download URL:', downloadUrl); // Debug log for download URL
+    console.log('Download URL:', downloadUrl);
 
-    // Fetch the media content
-    let response;
-    try {
-      response = await fetch(downloadUrl);
-    } catch (error) {
-      throw new Error('Failed to fetch the media content');
-    }
+    const response = await fetchWithRetry(downloadUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch the media content');
+    const contentType = response.headers.get('content-type');
+    if (!contentType || 
+        (!contentType.includes('image') && 
+        !contentType.includes('octet-stream') && 
+        !contentType.includes('video'))) {
+      throw new Error('Invalid content type received');
     }
 
     const arrayBuffer = await response.arrayBuffer();
     const mediaBuffer = Buffer.from(arrayBuffer);
 
-    // Determine file type and set filename and mimetype
-    const fileName = mediaData.type === 'video' ? 'media.mp4' : 'media.jpg';
-    const mimetype = mediaData.type === 'video' ? 'video/mp4' : 'image/jpeg';
+    if (mediaBuffer.length === 0) throw new Error('Downloaded file is empty');
 
-    // Send the media to the user
-    await conn.sendFile(m.chat, mediaBuffer, fileName, `Here is your media`, m, false, { mimetype });
+    const fileName = mediaData.data.title ? `${mediaData.data.title}.jpg` : 'media.jpg';
+    const mimetype = mediaData.data.video.length > 0 ? 'video/mp4' : 'image/jpeg';
+
+    await conn.sendFile(m.chat, mediaBuffer, fileName, '*𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 © 𝚄𝙻𝚃𝚁𝙰-𝙼𝙳*', m, false, { mimetype });
     m.react('✅');
   } catch (error) {
-    // Log the error and notify the user
-    console.error('Error:', error.message, error.stack);
+    console.error('Error downloading from Pinterest:', error.message, error.stack);
     await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
     m.react('❌');
   }
 };
 
-handler.help = ['pinterest <url>'];
+handler.help = ['pinterest', 'pin', 'pindl', 'pinterestdl', 'pinimage', 'pindownload'];
 handler.tags = ['downloader'];
-handler.command = ['pinterest'];
+handler.command = ['pinterest', 'pin', 'pindl', 'pinterestdl', 'pinimage', 'pindownload'];
 
 export default handler;
