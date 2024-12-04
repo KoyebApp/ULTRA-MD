@@ -47,7 +47,7 @@ const handler = async (m, { args, conn }) => {
             throw new Error('Invalid response from the downloader.');
         }
 
-        const videoUrl = response.data.HD;  // Use the HD video URL
+        const videoUrl = response.data.SD;  // Use the HD video URL
         if (!videoUrl) {
             throw new Error('HD video URL not found.');
         }
