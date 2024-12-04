@@ -10,7 +10,7 @@ const handler = async (m, { conn, args }) => {
     const url = args[0];
     let data = await twitterdown(url);
 
-    console.log(data);  // Log the full response for debugging
+    console.log(data);  // Log the full response to check
 
     // Access HD video URL from the response
     const hdUrl = data.data.HD;
@@ -19,11 +19,11 @@ const handler = async (m, { conn, args }) => {
       throw '❌ HD video link not found. Please check the URL or try another one.';
     }
 
-    const fileName = url.split('/').pop().split('?')[0]; // Use the last part of the URL as filename
-    const mimetype = 'video/mp4';  // Since we are dealing with video (HD)
+    const fileName = `${url.split('/').pop().split('?')[0]}.mp4`; // Use the last part of the URL for filename
+    const mimetype = 'video/mp4';  // We are dealing with video in mp4 format
 
-    let caption = `≡ *Twitter DL*\n▢ *Number:* ${fileName}\n▢ *Type:* ${mimetype}`.trim();
-    
+    let caption = `≡ *Twitter DL*\n▢ *Video Filename:* ${fileName}\n▢ *Type:* ${mimetype}`.trim();
+
     // Send the HD video directly
     await conn.sendFile(m.chat, hdUrl, fileName, caption, m, false, { mimetype });
     m.react('✅');
