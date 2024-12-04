@@ -1,80 +1,88 @@
+import fetch from 'node-fetch';
 import pkg from 'nayan-video-downloader';
-import axios from 'axios';  // Using axios for HTTP requests
-import fs from 'fs';
-import path from 'path';
+const { twitterdown } = pkg;  // Import the Twitter video downloader
 
-const { twitterdown } = pkg;
+// Retry function for fetching the video
+const fetchWithRetry = async (url, options, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        console.log(`Retrying... (${i + 1})`);
+    }
+    throw new Error('Failed to fetch media content after retries');
+};
 
-const TIMEOUT = 40000;  // 90 seconds timeout for the fetch request
-const MAX_RETRIES = 4;  // Max retries for failed downloads
-const RETRY_DELAY = 1000;  // Delay between retries in milliseconds
+const handler = async (m, { args, conn }) => {
+    // Check if a URL was provided
+    if (!args.length) {
+        await m.reply('Please provide a Twitter URL.');
+        return;
+    }
 
-// Retry logic for failed downloads
-const fetchWithRetry = async (url, retries = MAX_RETRIES, delay = RETRY_DELAY) => {
-  let attempt = 0;
-  while (attempt < retries) {
+    const url = args.join(' ');  // Join arguments to handle spaces in URLs
+
+    // Updated regex to match both twitter.com and x.com URLs
+    const twitterRegex = /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/.+$/;
+
+    // Validate the URL format
+    if (!twitterRegex.test(url)) {
+        await m.react('❌');  // React with a cross emoji for invalid URL
+        await m.reply('Invalid Twitter or X URL. Please provide a valid URL.');
+        return;
+    }
+
+    await m.react('⏳');  // React with a loading emoji
+
     try {
-      const response = await axios.get(url, {
-        responseType: 'stream',  // Ensures we get the video as a stream
-        timeout: TIMEOUT,        // Set the timeout
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        // Fetch video details from Twitter using nayan-video-downloader
+        const response = await twitterdown(url);
+        console.log('API Response:', response);
+
+        if (!response || !response.data) {
+            throw new Error('Invalid response from the downloader.');
         }
-      });
 
-      if (response.status === 200) {
-        return response.data;  // Return the video stream
-      } else {
-        throw new Error(`Failed to fetch video, status: ${response.status}`);
-      }
+        const videoUrl = response.data.HD;  // Use the HD video URL
+        if (!videoUrl) {
+            throw new Error('HD video URL not found.');
+        }
+
+        const title = response.data.fileName || 'video';  // Use the file name from the API response
+        const caption = `Twitter Video - ${title}`;
+
+        // Fetch the video file with retry logic
+        const mediaResponse = await fetchWithRetry(videoUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*'
+            }
+        });
+
+        const contentType = mediaResponse.headers.get('content-type');
+        if (!contentType || !contentType.includes('video')) {
+            throw new Error('Invalid content type received');
+        }
+
+        const arrayBuffer = await mediaResponse.arrayBuffer();
+        const mediaBuffer = Buffer.from(arrayBuffer);
+        if (mediaBuffer.length === 0) throw new Error('Downloaded file is empty');
+
+        // Send the video file
+        await conn.sendFile(m.chat, mediaBuffer, title + '.mp4', caption, m, false, {
+            mimetype: 'video/mp4'
+        });
+
+        await m.react('✅'); // React with a checkmark emoji for success
     } catch (error) {
-      attempt++;
-      console.log(`Attempt ${attempt} failed. Retrying in ${delay}ms...`);
-      if (attempt >= retries) throw new Error('Max retries reached. Could not fetch video.');
-      await new Promise(resolve => setTimeout(resolve, delay));  // Delay before retrying
+        console.error('Error fetching video:', error.message);
+        await m.reply('An error occurred while fetching the video. Please try again later.');
+        await m.react('❌');  // React with a cross emoji for errors
     }
-  }
 };
 
-const handler = async (m, { conn, args }) => {
-  if (!args[0]) throw `✳️ Enter the Twitter link next to the command`;
-  if (!args[0].match(/twitter|x\.com/gi)) throw `❌ Link incorrect`;
-  m.react('⏳');
-
-  try {
-    const url = args[0];
-    console.log('Processing URL:', url);  // Log URL for debugging
-    
-    let data = await twitterdown(url);
-    console.log('API Response:', data);  // Log the API response to verify the structure
-
-    const hdUrl = data.data.HD;
-    if (!hdUrl) {
-      console.log('No HD URL found');
-      throw '❌ HD video link not found';
-    }
-
-    // Fetch video with retry logic using axios
-    const videoStream = await fetchWithRetry(hdUrl);
-    console.log('Video stream fetched successfully');
-
-    const fileName = `${url.split('/').pop().split('?')[0]}.mp4`;  // Use last part of the URL for filename
-    const mimetype = 'video/mp4';
-    let caption = `≡ *Twitter DL*\n▢ *Video Filename:* ${fileName}\n▢ *Type:* ${mimetype}`.trim();
-
-    // Send the video stream directly to the chat
-    await conn.sendFile(m.chat, videoStream, fileName, caption, m, false, { mimetype });
-    console.log('Video sent successfully');
-    m.react('✅');
-  } catch (error) {
-    console.error('Error downloading from Twitter:', error);
-    await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
-    m.react('❌');
-  }
-};
-
-handler.help = ['twitter <url>'];
-handler.tags = ['downloader'];
+handler.help = ['twitter', 'twitdl'];
+handler.tags = ['dl'];
 handler.command = ['twitter', 'twitdl'];
 
 export default handler;
+                            
