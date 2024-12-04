@@ -9,8 +9,14 @@ const handler = async (m, { conn, args }) => {
   try {
     const url = args[0];
     let data = await twitterdown(url);
+    console.log(data);  // Log to check the response
+
     const { download, fileName, mimetype } = data;
     
+    if (!download) {
+      throw '❌ No download link found. Please check the URL or try another one.';
+    }
+
     let caption = `≡ *Twitter DL*\n▢ *Number:* ${fileName}\n▢ *Type:* ${mimetype}`.trim();
     
     await conn.sendFile(m.chat, download, fileName, caption, m, false, { mimetype });
