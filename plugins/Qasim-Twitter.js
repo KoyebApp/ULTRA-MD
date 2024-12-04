@@ -6,8 +6,8 @@ import path from 'path';
 const { twitterdown } = pkg;
 
 const TIMEOUT = 40000;  // 90 seconds timeout for the fetch request
-const MAX_RETRIES = 3;  // Max retries for failed downloads
-const RETRY_DELAY = 2000;  // Delay between retries in milliseconds
+const MAX_RETRIES = 4;  // Max retries for failed downloads
+const RETRY_DELAY = 1000;  // Delay between retries in milliseconds
 
 // Retry logic for failed downloads
 const fetchWithRetry = async (url, retries = MAX_RETRIES, delay = RETRY_DELAY) => {
@@ -17,6 +17,9 @@ const fetchWithRetry = async (url, retries = MAX_RETRIES, delay = RETRY_DELAY) =
       const response = await axios.get(url, {
         responseType: 'stream',  // Ensures we get the video as a stream
         timeout: TIMEOUT,        // Set the timeout
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
       });
 
       if (response.status === 200) {
