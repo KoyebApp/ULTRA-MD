@@ -2,12 +2,17 @@ import fetch from 'node-fetch';
 import pkg from 'nayan-video-downloader';
 const { twitterdown } = pkg;  // Import the Twitter video downloader
 
-// Retry function for fetching the video
-const fetchWithRetry = async (url, options, retries = 3) => {
+// Retry function for fetching the video with better error handling
+const fetchWithRetry = async (url, options, retries = 3, delay = 3000) => {
     for (let i = 0; i < retries; i++) {
-        const response = await fetch(url, options);
-        if (response.ok) return response;
-        console.log(`Retrying... (${i + 1})`);
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) return response;  // Return if fetch is successful
+            console.log(`Attempt ${i + 1} failed, retrying...`);
+        } catch (error) {
+            console.error(`Attempt ${i + 1} failed, retrying...`, error.message);
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));  // Delay before retrying
     }
     throw new Error('Failed to fetch media content after retries');
 };
@@ -15,7 +20,7 @@ const fetchWithRetry = async (url, options, retries = 3) => {
 const handler = async (m, { args, conn }) => {
     // Check if a URL was provided
     if (!args.length) {
-        await m.reply('Please provide a Twitter URL.');
+        await m.reply('Please provide a Twitter or X URL.');
         return;
     }
 
@@ -47,9 +52,6 @@ const handler = async (m, { args, conn }) => {
             throw new Error('HD video URL not found.');
         }
 
-        const title = response.data.fileName || 'video';  // Use the file name from the API response
-        const caption = `Twitter Video - ${title}`;
-
         // Fetch the video file with retry logic
         const mediaResponse = await fetchWithRetry(videoUrl, {
             headers: {
@@ -68,7 +70,7 @@ const handler = async (m, { args, conn }) => {
         if (mediaBuffer.length === 0) throw new Error('Downloaded file is empty');
 
         // Send the video file
-        await conn.sendFile(m.chat, mediaBuffer, title + '.mp4', caption, m, false, {
+        await conn.sendFile(m.chat, mediaBuffer, 'video.mp4', `Downloaded from ${url}`, m, false, {
             mimetype: 'video/mp4'
         });
 
@@ -85,4 +87,3 @@ handler.tags = ['dl'];
 handler.command = ['twitter', 'twitdl'];
 
 export default handler;
-                            
