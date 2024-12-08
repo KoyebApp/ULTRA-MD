@@ -34,16 +34,21 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Log the original URL and encode it using URLSearchParams
+        // Check if it's a Shorts URL and convert it to a regular video URL
+        let videoUrl = url;
+        if (url.includes('youtube.com/shorts/')) {
+            videoUrl = url.replace('youtube.com/shorts/', 'youtube.com/watch?v=');  // Convert to regular video URL
+        }
+
         console.log('Original URL:', url);
+        console.log('Converted URL:', videoUrl);
         
-        // Encode the URL using encodeURIComponent to pass as query parameter
-        const encodedUrl = encodeURIComponent(url);
+        // Encode the video URL
+        const encodedUrl = encodeURIComponent(videoUrl);
         
         // Construct the API URL with the video_url parameter
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodedUrl}`;
         
-        // Log the final API URL
         console.log('API URL:', apiUrl); // Log the final URL being sent
 
         // Call your API to get the video details
@@ -60,12 +65,12 @@ const handler = async (m, { args, conn, usedprefix }) => {
             throw new Error('Video URL not found.');
         }
 
-        const videoUrl = response.data.video_url; // Use video URL from the response
+        const videoUrlFromApi = response.data.video_url; // Use video URL from the response
         const title = response.data.title || 'video'; // Video title from the response
         const caption = `Powered by ULTRA-MD | Title: ${title}`;
 
         // Fetch the video file with retry logic
-        const mediaResponse = await fetchWithRetry(videoUrl, {
+        const mediaResponse = await fetchWithRetry(videoUrlFromApi, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
                 'Accept': 'application/json, text/plain, */*'
@@ -100,4 +105,3 @@ handler.tags = ['dl'];
 handler.command = ['ytmp4', 'ytv'];
 
 export default handler;
-                                        
