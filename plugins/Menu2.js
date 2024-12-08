@@ -41,7 +41,7 @@ let str = `
 
 📋 *_Quote of the day: ${quote}_* 📋
 > ➠ *Bot Name* : *ULTRA-MD*
-> ➠ *Version*     : *LATEST*
+> ➠ *Version*     : *3 . 1 . 0*
 > ➠ *Type*          : *PLUGINS*
 > ➠ *Platform*   : *LINUX*
 
