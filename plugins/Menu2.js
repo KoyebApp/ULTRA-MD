@@ -41,9 +41,9 @@ let str = `
 
 📋 *_Quote of the day: ${quote}_* 📋
 > ➠ *Bot Name* : ULTRA-MD
-> ➠ *Version*  : LATEST
-> ➠ *Type*     : PLUGINS
-> ➠ *Platform* : LINUX
+> ➠ *Version*   : LATEST
+> ➠ *Type*       : PLUGINS
+> ➠ *Platform*  : LINUX
 
 ◈┏━⟪ *MENU* ⟫━━⦿
 ◈┃• groupmenu
@@ -80,7 +80,7 @@ let str = `
 
 © GlobalTechInfo
 
-> 💡 *_Remember, when in doubt, use ${usedPrefix}list or ${usedPrefix}help It's like my magic spell book!_* 💡
+> 💡 *_Remember, when in doubt, use ${usedPrefix}listmenu or ${usedPrefix}help It's like my magic spell book!_* 💡
 `
 
     
