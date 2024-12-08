@@ -40,23 +40,12 @@ let str = `
 🚀 *_Buckle up ${name}, ${greeting}! We're going on an adventure!_* 🚀
 
 📋 *_Quote of the day: ${quote}_* 📋
-
-『 *ULTRA-MD*』
-
-☆┏━『 *User Info* 』 
-☆┃ 🪪  *Name:* ${name}  
-☆┃ 🏆  *Rank:* ${role}
-☆┃ 🎮  *XP:* ${exp} 
-☆┗━━━━━━━━━━⦿
-☆┏━━ 『 *Date/Time* 』
-☆┃ 📆   ${date} 
-☆┃ ⏰ *Time:*  ${wib} 
-☆┗━━━━━━━━━━⦿
-☆┏━━『 *Bot Status* 』
-☆┃  🎩 *Bot Name:* ${botname}
-☆┃ 📣  *Prefix:* ${usedPrefix} 
-☆┃ 🕓  *Uptime:* ${uptime}
-☆┗━━━━━━━━━━⦿
+> ➠ *Bot Name* : ULTRA-MD
+> ➠ *Version* : 3.1.0
+> ➠ *Type* : ᴘʟᴜɢɪɴs
+> ➠ *RAM Usage:* ${format(totalmem() - freemem())} / ${format(totalmem())}
+> ➠ *Runtime:* ${uptime}
+> ➠ *Platform:* ${platform}
 
 ◈┏━⟪ *MENU* ⟫━━⦿
 ◈┃• groupmenu
