@@ -26,44 +26,50 @@ let handler = async (m, { conn, text }) => {
       throw 'No songs found for the given search query.'
     }
 
-    // Extract the song URL from the first search result
-    const songUrl = spurl.data[0].url
-    if (!songUrl) {
-      throw 'The song URL is missing in the search results.'
+    // Loop through the search results to find a valid download URL
+    let downloadUrl = null
+    let songTitle = null
+    for (let i = 0; i < spurl.data.length; i++) {
+      const song = spurl.data[i]
+      const songUrl = song.url
+      if (songUrl) {
+        // Fetch the download link using the song URL
+        let dlres = await fetch(`https://global-tech-api.vercel.app/spotifydl?url=${songUrl}`)
+        dlres = await dlres.json()
+
+        // Log the download API response for debugging
+        console.log('Spotify Download API Response:', dlres)
+
+        // Check if the download response contains the necessary URL and thumbnail
+        if (dlres.status && dlres.data && dlres.data.url && dlres.data.thumbnail) {
+          downloadUrl = dlres.data.url
+          songTitle = song.title
+          break // Exit the loop if a valid download URL is found
+        }
+      }
     }
 
-    // Fetch the download link using the song URL
-    let dlres = await fetch(`https://global-tech-api.vercel.app/spotifydl?url=${songUrl}`)
-    dlres = await dlres.json()
-
-    // Log the download API response for debugging
-    console.log('Spotify Download API Response:', dlres)
-
-    // Check if the download response contains the necessary URL and thumbnail
-    if (!dlres.data || !dlres.data.url || !dlres.data.thumbnail) {
-      throw 'Download link or thumbnail not found.'
+    // If no valid download URL is found, throw an error
+    if (!downloadUrl) {
+      throw 'Download link or thumbnail not found for the song.'
     }
-
-    // Extract the download URL and thumbnail from the response
-    let sturl = dlres.data.url
-    let thumbnailUrl = dlres.data.thumbnail
 
     // Prepare the audio message object
     let doc = {
       audio: {
-        url: sturl,
+        url: downloadUrl,
       },
       mimetype: 'audio/mpeg',
       ptt: true,
       waveform: [100, 0, 100, 0, 100, 0, 100],
-      fileName: `${text}.mp3`, // Dynamically name the file based on the song title
+      fileName: `${songTitle}.mp3`, // Dynamically name the file based on the song title
 
       contextInfo: {
         mentionedJid: [m.sender],
         externalAdReply: {
           title: '↺ |◁   II   ▷|   ♡',
-          body: `Now playing: ${text}`,
-          thumbnailUrl: thumbnailUrl,
+          body: `Now playing: ${songTitle}`,
+          thumbnailUrl: dlres.data.thumbnail,
           sourceUrl: null,
           mediaType: 1,
           renderLargerThumbnail: false,
