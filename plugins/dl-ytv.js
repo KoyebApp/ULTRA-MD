@@ -34,14 +34,16 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Encode the URL and log it for debugging purposes
+        // Log the original URL and encode it using URLSearchParams
+        console.log('Original URL:', url);
+        
+        // Encode the URL using encodeURIComponent to pass as query parameter
         const encodedUrl = encodeURIComponent(url);
-        console.log('Encoded URL:', encodedUrl);  // Log the URL to check
-
-        // Construct the API URL with the correctly encoded query parameter
+        
+        // Construct the API URL with the video_url parameter
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodedUrl}`;
         
-        // Log the full API URL to verify it is correctly formed
+        // Log the final API URL
         console.log('API URL:', apiUrl); // Log the final URL being sent
 
         // Call your API to get the video details
@@ -98,3 +100,4 @@ handler.tags = ['dl'];
 handler.command = ['ytmp4', 'ytv'];
 
 export default handler;
+                                        
