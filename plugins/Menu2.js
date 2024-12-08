@@ -40,10 +40,10 @@ let str = `
 🚀 *_Buckle up ${name}, ${greeting}! We're going on an adventure!_* 🚀
 
 📋 *_Quote of the day: ${quote}_* 📋
-> ➠ *Bot Name* : ULTRA-MD
-> ➠ *Version*   : LATEST
-> ➠ *Type*       : PLUGINS
-> ➠ *Platform*  : LINUX
+> ➠ *Bot Name* : *ULTRA-MD*
+> ➠ *Version*     : *LATEST*
+> ➠ *Type*          : *PLUGINS*
+> ➠ *Platform*   : *LINUX*
 
 ◈┏━⟪ *MENU* ⟫━━⦿
 ◈┃• groupmenu
