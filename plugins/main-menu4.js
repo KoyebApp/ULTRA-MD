@@ -55,12 +55,12 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 ┃ 💎  *Diamonds:* ${diamond} 
 ┃ 🏆  *Rank:* ${role}
 ┃ 🎮  *XP:* ${exp} 
-┗━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━┛
 
-┏━━⏰ _Today's Sauce!_ ⏰━┓
+┏━⏰ _Today's Sauce!_ ⏰━┓
 ┃ 📆  *Date:* ${date} 
 ┃ ⏲️  *Time:* ${wib} 
-┗━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━━🤖 _BOT STATUS:_🤖━━┓
 ┃ 🤡  *Bot Name:* ${botname} 
@@ -69,7 +69,7 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 ┃ 🕓  *Uptime:* ${uptime}
 ┃ 💌  *Database:* ${rtotalreg} of ${totaluser} 
 ┃ 📚  *Total Users:* ${totaluser} 
-┗━━━━━━━━━━━━━┛
+┗━━━━━━━━━━━━━━━━━━━━┛
 
 💡 *_Remember, when in doubt, use ${usedPrefix}list or ${usedPrefix}help It's like my magic spell book!_* 💡
 `
