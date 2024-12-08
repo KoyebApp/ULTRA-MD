@@ -239,8 +239,14 @@ class Spotify {
     }
   }
 }
+
+// Define the handler object before using it
+const handler = new Spotify();
+
+// Now, you can set the properties
 handler.help = ['spotify'];
 handler.tags = ['downloader'];
 handler.command = /^(spotify|song)$/i;
 
 export default handler;
+          
