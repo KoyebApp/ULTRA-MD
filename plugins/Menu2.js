@@ -41,10 +41,9 @@ let str = `
 
 📋 *_Quote of the day: ${quote}_* 📋
 > ➠ *Bot Name* : ULTRA-MD
-> ➠ *Version* : 3.1.0
-> ➠ *Type* : ᴘʟᴜɢɪɴs
-> ➠ *Runtime:* ${uptime}
-> ➠ *Platform:* LINUX
+> ➠ *Version*  : LATEST
+> ➠ *Type*     : PLUGINS
+> ➠ *Platform* : LINUX
 
 ◈┏━⟪ *MENU* ⟫━━⦿
 ◈┃• groupmenu
