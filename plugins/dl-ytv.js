@@ -18,4 +18,7 @@ async function fetchYtmp4(queryParams = {}) {
   }
 }
 
-module.exports = fetchYtmp4;
+
+handler.help = ['ytmp4 <yt-link>'];
+handler.tags = ['downloader'];
+handler.command = ['ytmp4', 'video', 'ytv']
