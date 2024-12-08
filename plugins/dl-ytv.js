@@ -1,4 +1,4 @@
-import axios from 'axios'; // Importing axios to make HTTP requests
+import axios from 'axios'; // Importing axios for HTTP requests
 
 // Function to fetch media content with retries
 const fetchWithRetry = async (url, options, retries = 3) => {
@@ -34,11 +34,11 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Construct the API URL to call your endpoint
+        // Construct the API URL to call your endpoint, encoding the URL parameter correctly
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodeURIComponent(url)}`;
         
         // Call your API to get the video details
-        const response = await axios.get(apiUrl); 
+        const response = await axios.get(apiUrl);
 
         console.log('API Response:', response.data); // Log the API response
 
