@@ -34,19 +34,20 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Call your custom API with the video URL query parameter
+        // Construct API URL to call your endpoint
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodeURIComponent(url)}`;
         
-        const response = await axios.get(apiUrl); // Make the API request
+        // Call your API to get the video details
+        const response = await axios.get(apiUrl); 
 
         console.log('API Response:', response.data); // Log the API response
 
         // Check if the response contains the necessary data
-        if (!response || !response.data || !response.data.video_hd) {
+        if (!response || !response.data || !response.data.video_url) {
             throw new Error('HD video URL not found.');
         }
 
-        const videoUrl = response.data.video_hd; // Use HD video URL from the response
+        const videoUrl = response.data.video_url; // Use video URL from the response
         const title = response.data.title || 'video'; // Video title from the response
         const caption = `Powered by ULTRA-MD | Title: ${title}`;
 
