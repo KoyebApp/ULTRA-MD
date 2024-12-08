@@ -43,7 +43,6 @@ let str = `
 > ➠ *Bot Name* : ULTRA-MD
 > ➠ *Version* : 3.1.0
 > ➠ *Type* : ᴘʟᴜɢɪɴs
-> ➠ *RAM Usage:* ${(freemem())}
 > ➠ *Runtime:* ${uptime}
 > ➠ *Platform:* ${platform}
 
