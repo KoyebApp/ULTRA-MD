@@ -1,10 +1,10 @@
-import axios from 'axios';  // Importing axios for making HTTP requests
+import axios from 'axios';
 
 // Function to retry fetching media content
-const fetchWithRetry = async (url, options, retries = 3) => {
+const fetchWithRetry = async (url, retries = 3) => {
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await axios(url, options);
+            const response = await axios(url);
             if (response.status === 200) return response;
             console.log(`Retrying... (${i + 1})`);
         } catch (error) {
@@ -36,8 +36,10 @@ const handler = async (m, { args, conn, usedprefix }) => {
     try {
         // Check if it's a Shorts URL and convert it to a regular video URL
         let videoUrl = url;
+
         if (url.includes('youtube.com/shorts/')) {
-            videoUrl = url.replace('youtube.com/shorts/', 'youtube.com/watch?v=');  // Convert to regular video URL
+            const videoId = url.split('/').pop().split('?')[0];  // Extract video ID from Shorts URL
+            videoUrl = `https://youtube.com/watch?v=${videoId}`;  // Create the correct video URL
         }
 
         console.log('Original URL:', url);
@@ -70,12 +72,11 @@ const handler = async (m, { args, conn, usedprefix }) => {
         const caption = `Powered by ULTRA-MD | Title: ${title}`;
 
         // Fetch the video file with retry logic
-        const mediaResponse = await fetchWithRetry(videoUrlFromApi, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*'
-            }
-        });
+        const mediaResponse = await fetchWithRetry(videoUrlFromApi);
+
+        if (!mediaResponse) {
+            throw new Error('Failed to fetch the media content');
+        }
 
         const contentType = mediaResponse.headers['content-type'];
         if (!contentType || !contentType.includes('video')) {
