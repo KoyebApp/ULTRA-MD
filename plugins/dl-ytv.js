@@ -34,10 +34,11 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Call your API to fetch video details
-        const response = await axios.get('https://global-tech-api.vercel.app/ytdl/ytmp4', {
-            params: { video_url: url }  // Pass the YouTube URL correctly
-        });
+        // Call your custom API with the video URL query parameter
+        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodeURIComponent(url)}`;
+        
+        const response = await axios.get(apiUrl); // Make the API request
+
         console.log('API Response:', response.data); // Log the API response
 
         // Check if the response contains the necessary data
