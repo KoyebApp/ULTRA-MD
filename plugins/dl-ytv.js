@@ -1,6 +1,6 @@
-import axios from 'axios'; // Importing axios for HTTP requests
+import axios from 'axios';  // Importing axios for making HTTP requests
 
-// Function to fetch media content with retries
+// Function to retry fetching media content
 const fetchWithRetry = async (url, options, retries = 3) => {
     for (let i = 0; i < retries; i++) {
         try {
@@ -34,13 +34,20 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Construct the API URL to call your endpoint, encoding the URL parameter correctly
-        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodeURIComponent(url)}`;
+        // Encode the URL and log it for debugging purposes
+        const encodedUrl = encodeURIComponent(url);
+        console.log('Encoded URL:', encodedUrl);  // Log the URL to check
+
+        // Construct the API URL with the correctly encoded query parameter
+        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodedUrl}`;
         
+        // Log the full API URL to verify it is correctly formed
+        console.log('API URL:', apiUrl); // Log the final URL being sent
+
         // Call your API to get the video details
         const response = await axios.get(apiUrl);
 
-        console.log('API Response:', response.data); // Log the API response
+        console.log('API Response:', response.data); // Log the API response for debugging
 
         // Check if the response contains the necessary data
         if (!response || !response.data || response.data.status === false) {
@@ -48,7 +55,7 @@ const handler = async (m, { args, conn, usedprefix }) => {
         }
 
         if (!response.data.video_url) {
-            throw new Error('HD video URL not found.');
+            throw new Error('Video URL not found.');
         }
 
         const videoUrl = response.data.video_url; // Use video URL from the response
