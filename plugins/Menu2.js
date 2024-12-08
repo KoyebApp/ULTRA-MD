@@ -44,7 +44,7 @@ let str = `
 > ➠ *Version* : 3.1.0
 > ➠ *Type* : ᴘʟᴜɢɪɴs
 > ➠ *Runtime:* ${uptime}
-> ➠ *Platform:* ${platform}
+> ➠ *Platform:* LINUX
 
 ◈┏━⟪ *MENU* ⟫━━⦿
 ◈┃• groupmenu
