@@ -1,4 +1,4 @@
-import axios from 'axios';  // Importing axios to make HTTP requests
+import axios from 'axios'; // Importing axios to make HTTP requests
 
 // Function to fetch media content with retries
 const fetchWithRetry = async (url, options, retries = 3) => {
