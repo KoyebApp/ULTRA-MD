@@ -34,7 +34,7 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Construct API URL to call your endpoint
+        // Construct the API URL to call your endpoint
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${encodeURIComponent(url)}`;
         
         // Call your API to get the video details
@@ -43,7 +43,11 @@ const handler = async (m, { args, conn, usedprefix }) => {
         console.log('API Response:', response.data); // Log the API response
 
         // Check if the response contains the necessary data
-        if (!response || !response.data || !response.data.video_url) {
+        if (!response || !response.data || response.data.status === false) {
+            throw new Error(response.data.msg || 'Error fetching video details');
+        }
+
+        if (!response.data.video_url) {
             throw new Error('HD video URL not found.');
         }
 
@@ -76,7 +80,7 @@ const handler = async (m, { args, conn, usedprefix }) => {
         await m.react('✅'); // React with a checkmark emoji for success
     } catch (error) {
         console.error('Error fetching video:', error.message, error.stack);
-        await m.reply('An error occurred while fetching the video. Please try again later.');
+        await m.reply(`An error occurred: ${error.message}`);
         await m.react('❌'); // React with a cross emoji for errors
     }
 };
