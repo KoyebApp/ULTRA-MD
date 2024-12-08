@@ -1,4 +1,4 @@
-import axios from 'axios'; // Importing axios to make HTTP requests
+import axios from 'axios';  // Importing axios to make HTTP requests
 
 // Function to fetch media content with retries
 const fetchWithRetry = async (url, options, retries = 3) => {
@@ -34,22 +34,18 @@ const handler = async (m, { args, conn, usedprefix }) => {
     await m.react('⏳'); // React with a loading emoji
 
     try {
-        // Call your own API to fetch video details
+        // Call your API to fetch video details
         const response = await axios.get('https://global-tech-api.vercel.app/ytdl/ytmp4', {
-            params: { video_url: url }
+            params: { video_url: url }  // Pass the YouTube URL correctly
         });
         console.log('API Response:', response.data); // Log the API response
 
         // Check if the response contains the necessary data
-        if (!response || !response.data) {
-            throw new Error('Invalid response from the downloader.');
-        }
-
-        const videoUrl = response.data.video_hd; // Use HD video URL from the response
-        if (!videoUrl) {
+        if (!response || !response.data || !response.data.video_hd) {
             throw new Error('HD video URL not found.');
         }
 
+        const videoUrl = response.data.video_hd; // Use HD video URL from the response
         const title = response.data.title || 'video'; // Video title from the response
         const caption = `Powered by ULTRA-MD | Title: ${title}`;
 
@@ -89,4 +85,3 @@ handler.tags = ['dl'];
 handler.command = ['ytmp4', 'ytv'];
 
 export default handler;
-      
