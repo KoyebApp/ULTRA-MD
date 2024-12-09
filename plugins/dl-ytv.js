@@ -6,9 +6,9 @@ const fetchWithRetry = async (url, retries = 3) => {
         try {
             const response = await axios(url);
             if (response.status === 200) return response;
-            console.log(`Retrying... (${i + 1})`);
+            console.log(`Retrying... (${i + 1}) - Received status code: ${response.status}`);
         } catch (error) {
-            console.log(`Error fetching data. Retrying... (${i + 1})`);
+            console.log(`Error fetching data (attempt ${i + 1}): ${error.message}`);
         }
     }
     throw new Error('Failed to fetch media content after retries');
@@ -44,13 +44,13 @@ const handler = async (m, { args, conn, usedprefix }) => {
 
         console.log('Original URL:', url);
         console.log('Converted URL:', videoUrl);
-        
+
         // Encode the video URL
         const video_url = encodeURIComponent(videoUrl);
-        
-        // Construct the API URL with the video_url parameter (use 'url' instead of 'video_url' to test)
+
+        // Construct the API URL with the video_url parameter
         const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?url=${video_url}`;
-        
+
         console.log('API URL:', apiUrl); // Log the final URL being sent
 
         // Call your API to get the video details
@@ -59,19 +59,20 @@ const handler = async (m, { args, conn, usedprefix }) => {
         console.log('API Response:', response.data); // Log the API response for debugging
 
         // Check if the response contains the necessary data
-        if (!response || !response.data || response.data.status === false) {
-            throw new Error(response.data.msg || 'Error fetching video details');
+        if (!response || !response.data || !response.data.video_url) {
+            throw new Error(response?.data?.msg || 'Error fetching video details');
         }
 
-        if (!response.data.video_url) {
-            throw new Error('Video URL not found.');
+        // Extract the video_url (download link) and other info from the API response
+        const { video_url: videoUrlFromApi, title, creator, author, description } = response.data;
+        const caption = `Powered by ULTRA-MD\nTitle: ${title || 'No title available'}\nCreator: ${creator || 'Unknown creator'}\nAuthor: ${author || 'Unknown author'}\nDescription: ${description || 'No description available'}`;
+
+        // Ensure the video URL is valid
+        if (!videoUrlFromApi || !/^https?:\/\/.+/.test(videoUrlFromApi)) {
+            throw new Error('Invalid video URL received');
         }
 
-        const videoUrlFromApi = response.data.video_url; // Use video URL from the response
-        const title = response.data.title || 'video'; // Video title from the response
-        const caption = `Powered by ULTRA-MD | Title: ${title}`;
-
-        // Fetch the video file with retry logic
+        // Fetch the video file with retry logic using the "dl url" (video_url)
         const mediaResponse = await fetchWithRetry(videoUrlFromApi);
 
         if (!mediaResponse) {
@@ -88,7 +89,7 @@ const handler = async (m, { args, conn, usedprefix }) => {
         if (mediaBuffer.length === 0) throw new Error('Downloaded file is empty');
 
         // Send the video file
-        await conn.sendFile(m.chat, mediaBuffer, `null`, caption, m, false, {
+        await conn.sendFile(m.chat, mediaBuffer, 'video.mp4', caption, m, false, {
             mimetype: 'video/mp4'
         });
 
