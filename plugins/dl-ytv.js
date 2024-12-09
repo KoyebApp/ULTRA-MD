@@ -48,8 +48,8 @@ const handler = async (m, { args, conn, usedprefix }) => {
         // Encode the video URL
         const video_url = encodeURIComponent(videoUrl);
         
-        // Construct the API URL
-        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?url=${video_url}`;
+        // Construct the API URL with 'video_url' query parameter
+        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${video_url}`;
         
         console.log('API URL:', apiUrl); // Log the final URL being sent
 
