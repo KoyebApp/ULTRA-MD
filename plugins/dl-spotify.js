@@ -17,7 +17,7 @@ let handler = async (m, { conn, text }) => {
 
   try {
     // Searching for the song on the Spotify search API
-    let res = `https://api.guruapi.tech/spotifysearch?query=${query}`
+    let res = `https://global-tech-api.vercel.app/spotifysearch?query=${query}`
     let spurlResponse = await fetch(res)
     if (!spurlResponse.ok) {
       throw new Error('Failed to fetch song data from Spotify search API.')
