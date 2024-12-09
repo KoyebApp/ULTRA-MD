@@ -46,10 +46,10 @@ const handler = async (m, { args, conn, usedprefix }) => {
         console.log('Converted URL:', videoUrl);
         
         // Encode the video URL
-        const video_url = encodeURIComponent(videoUrl);
+        const encodedUrl = encodeURIComponent(videoUrl);
         
-        // Construct the API URL with 'video_url' query parameter
-        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?video_url=${video_url}`;
+        // Construct the API URL with the 'url' query parameter (changed from 'video_url')
+        const apiUrl = `https://global-tech-api.vercel.app/ytdl/ytmp4?url=${encodedUrl}`;
         
         console.log('API URL:', apiUrl); // Log the final URL being sent
 
@@ -68,7 +68,7 @@ const handler = async (m, { args, conn, usedprefix }) => {
         const title = response.data.title || 'video'; // Video title from the response
         const creator = response.data.creator || 'Unknown Creator';
         const description = response.data.description || 'No description available';
-        const caption = `Powered by ULTRA-MD | Title: ${title} | Creator: ${creator}`;
+        const caption = `Powered by ULTRA-MD | Title: ${title} | Creator: ${creator} | Description: ${description}`;
 
         // Fetch the video file with retry logic
         const mediaResponse = await fetchWithRetry(videoUrlFromApi);
