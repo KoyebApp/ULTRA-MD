@@ -4,7 +4,7 @@ name: Docker CI
 on:
   push:
     branches:
-      - "*"  # This will trigger on all branches, so every commit gets built.
+      - "main"  # This will trigger on all branches, so every commit gets built.
     tags:
       - "v*.*.*"  # Optional: Trigger on version tags if you want to tag releases with semantic versioning.
 
@@ -14,8 +14,8 @@ on:
       - "main"
 
 env:
-  REGISTRY: ghcr.io  # You can change to docker.io or any other registry you use
-  IMAGE_NAME: ${{ github.repository }}  # This will be <username>/<repo_name>
+  REGISTRY: ghcr.io  # Set registry to GitHub Container Registry
+  IMAGE_NAME: "globaltechinfo/umd"  # Manually set repo name in lowercase
 
 jobs:
   build:
