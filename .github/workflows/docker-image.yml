@@ -1,69 +1,36 @@
-name: Docker CI
+name: Docker Image CI
 
-# Trigger the workflow on push to the `main` branch or any branch
 on:
   push:
-    branches:
-      - "main"  # This will trigger on all branches, so every commit gets built.
-    tags:
-      - "v*.*.*"  # Optional: Trigger on version tags if you want to tag releases with semantic versioning.
-
-  # Also trigger on pull request to `main` (optional, you can keep or remove this)
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - "main"
-
-env:
-  REGISTRY: ghcr.io  # Set registry to GitHub Container Registry
-  IMAGE_NAME: "globaltechinfo/umd"  # Manually set repo name in lowercase
+    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # This specifies the VM environment (Ubuntu in this case)
-    
-    permissions:
-      contents: read  # Read access to the repository
-      packages: write  # Write access to GitHub Container Registry (for pushing images)
-      id-token: write  # Allow issuing of the identity token (for secure login)
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4  # Checkout the repository
+    - name: Checkout source code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
 
-      # Install Docker Buildx to enable advanced Docker features
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.REG_TOKEN }}
 
-      # Log in to GitHub Container Registry using GitHub Actions token
-      - name: Log into GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  # GitHub token will allow pushing to the container registry
+    - name: Build and tag the Docker image
+      run: |
+        REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        docker build . --file Dockerfile --tag ghcr.io/$REPO_OWNER/deploy-umd:latest
 
-      # Extract metadata from the repository for the Docker image (tags, labels)
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    - name: Push the Docker image
+      run: |
+        REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        docker push ghcr.io/$REPO_OWNER/deploy-umd:latest
 
-      # Build and push the Docker image
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .  # The current directory where Dockerfile is located
-          push: true  # This will push the image to the registry
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest  # This tags the image as "latest"
-          cache-from: type=gha  # Use GitHub Actions cache to speed up builds
-          cache-to: type=gha,mode=max  # Cache the Docker layers for faster builds next time
-
-      # Optional: Sign the Docker image if needed
-      - name: Sign the Docker image
-        if: github.event_name != 'pull_request'  # Avoid signing during pull requests
-        run: |
-          echo "Signing image"
-          # If needed, you can use a tool like cosign here to sign the Docker image
-          # cosign sign --yes ${image}
-          
