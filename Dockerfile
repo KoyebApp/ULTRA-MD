@@ -1,30 +1,25 @@
-# Use Node.js 20 based on Alpine
 FROM node:20-alpine
 
-# Install required system dependencies, including build tools, image libraries, and other utilities
-RUN apk add --no-cache \
-    ffmpeg \
-    python3 \
-    imagemagick \
-    webp \
-    curl \
-    git \
-    sudo \
-    bash \
-    graphicsmagick \
-    yarn
+ENV TZ=Asia/Karachi
 
-# Install global npm packages
+RUN apk add --no-cache \
+    tzdata \
+    ffmpeg \
+    git \
+    imagemagick \
+    python3 \
+    graphicsmagick \
+    sudo \
+    npm \
+    yarn \
+    curl \
+    bash && \
+    cp /usr/share/zoneinfo/Asia/Karachi /etc/localtime && \
+    echo "Asia/Karachi" > /etc/timezone
+
 RUN npm install -g supervisor
 
-# Set the working directory inside the container
-WORKDIR /qasim
+RUN apk del curl && \
+    rm -rf /var/cache/apk/*
 
-# Optionally copy your app files and install dependencies
-# COPY package*.json /qasim/
-# RUN npm install
-
-# Expose a port (if you intend to run your app with this image later)
-EXPOSE 5000
-
-# By default, just leave the image as is without running anything (no CMD here)
+CMD ["bash"]
