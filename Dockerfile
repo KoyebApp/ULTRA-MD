@@ -10,11 +10,9 @@ RUN apk add --no-cache \
     curl \
     git \
     sudo \
-    npm \
-    yarn \
     bash \
-    graphicsmagick && \
-    rm -rf /var/cache/apk/*
+    graphicsmagick \
+    yarn
 
 # Install global npm packages
 RUN npm install -g supervisor
