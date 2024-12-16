@@ -11,7 +11,7 @@ RUN rm -rf /root/qasim/.git
 WORKDIR /root/qasim
 
 # Install dependencies (using npm or yarn)
-RUN npm install || yarn install
+RUN npm install && npm install qrcode-terminal
 
 # Expose port 5000
 EXPOSE 5000
