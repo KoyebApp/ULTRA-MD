@@ -1,7 +1,7 @@
 
 FROM quay.io/globaltechinfo/umd:latest
 
-RUN git clone https://github.com/GlobalTechInfo/ULTRA-MD /root/qasi
+RUN git clone https://github.com/GlobalTechInfo/ULTRA-MD /root/qasim
 RUN rm -rf /root/qasim/.git
 
 WORKDIR /root/qasim
