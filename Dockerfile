@@ -2,8 +2,7 @@
 FROM node:20-alpine
 
 # Install required system dependencies, including build tools, image libraries, and other utilities
-RUN apk update && \
-    apk add --no-cache \
+RUN apk add --no-cache \
     ffmpeg \
     python3 \
     imagemagick \
