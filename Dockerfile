@@ -28,10 +28,10 @@ RUN apt-get update && \
 RUN npm install -g supervisor
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /qasim
 
 # Copy your app files and install dependencies
-COPY package*.json /app/
+COPY package*.json /qasim/
 RUN npm install
 
 # Expose a port (if you intend to run your app with this image later)
