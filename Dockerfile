@@ -1,25 +1,20 @@
-FROM node:20-alpine
+# Use a base image from Quay
+FROM quay.io/globaltechinfo/umd:latest
 
-ENV TZ=Asia/Karachi
+# Clone the repository (you could also copy the app if you already have it locally)
+RUN git clone https://github.com/GlobalTechInfo/ULTRA-MD /root/qasim
 
-RUN apk add --no-cache \
-    tzdata \
-    ffmpeg \
-    git \
-    imagemagick \
-    python3 \
-    graphicsmagick \
-    sudo \
-    npm \
-    yarn \
-    curl \
-    bash && \
-    cp /usr/share/zoneinfo/Asia/Karachi /etc/localtime && \
-    echo "Asia/Karachi" > /etc/timezone
+# Remove .git directory to reduce image size
+RUN rm -rf /root/qasim/.git
 
-RUN npm install -g supervisor
+# Set the working directory
+WORKDIR /root/qasim
 
-RUN apk del curl && \
-    rm -rf /var/cache/apk/*
+# Install dependencies (using npm or yarn)
+RUN npm install || yarn install
 
-CMD ["bash"]
+# Expose port 5000
+EXPOSE 5000
+
+# Define the start command
+CMD ["npm", "start"]
