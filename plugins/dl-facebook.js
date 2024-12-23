@@ -7,7 +7,9 @@ async function fetchWithRetry(url, options, retries = 3, delay = 3000) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    // Use arrayBuffer() instead of buffer() to avoid the deprecation warning
+    const responseBody = await response.arrayBuffer();
+    return responseBody;
   } catch (error) {
     if (retries > 0) {
       console.log(`Fetch failed, retrying... (${retries} retries left)`);
