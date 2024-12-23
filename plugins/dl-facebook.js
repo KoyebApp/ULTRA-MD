@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 // Utility function for retrying the fetch request
-async function fetchWithRetry(url, options, retries = 3, delay = 3000) {
+async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
   try {
     const response = await fetchWithTimeout(url, options);
     if (!response.ok) {
