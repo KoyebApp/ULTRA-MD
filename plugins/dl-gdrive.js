@@ -1,35 +1,34 @@
-import pkg from 'nayan-videos-downloader'
-const { GDLink } = pkg
-
-const url = 'url' // Public Google Drive Url
+import pkg from 'nayan-videos-downloader';
+const { GDLink } = pkg;
 
 const handler = async (m, { conn, args }) => {
-  if (!args[0]) throw '✳️ Enter the gdrive link next to the command';
+  if (!args[0]) throw '✳️ Enter the Google Drive link next to the command';
 
   m.react('⏳');
   try {
     const url = args[0];
     console.log('Checking link:', url);
 
-    // Fetching data from Pinterest using 'pinterest' method from the package
+    // Fetching media data from Google Drive using the GDLink method from the package
     let mediaData;
     try {
-      mediaData = await GDLink(url); // You must ensure this method exists and works
+      mediaData = await GDLink(url); // Fetch data from Google Drive
       console.log('Media Data:', mediaData);
     } catch (error) {
-      console.error('Error fetching Gdrive data:', error.message);
-      throw new Error('Could not fetch Pinterest data');
+      console.error('Error fetching Google Drive data:', error.message);
+      throw new Error('Could not fetch Google Drive data');
     }
 
-    // Ensure mediaData and the necessary properties exist before accessing them
-    if (!mediaData || (!mediaData.url && !mediaData.thumbnail)) {
+    // Ensure mediaData and the necessary 'data' property exists
+    if (!mediaData || !mediaData.data) {
       throw new Error('No valid media URL found');
     }
 
-    const mediaUrl = mediaData.url || mediaData.thumbnail; // Use thumbnail if URL is not available
+    // The actual download link is in the 'data' property
+    const mediaUrl = mediaData.data;
     console.log('Media URL:', mediaUrl);
 
-    // Handle media based on its type (image or video)
+    // Fetch the media content
     const response = await fetchWithRetry(mediaUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36',
@@ -44,7 +43,7 @@ const handler = async (m, { conn, args }) => {
       throw new Error('No content-type received');
     }
 
-    // Handle video
+    // Handle video download
     if (contentType.includes('video')) {
       const arrayBuffer = await response.arrayBuffer();
       const mediaBuffer = Buffer.from(arrayBuffer);
@@ -54,10 +53,10 @@ const handler = async (m, { conn, args }) => {
       const fileName = mediaData.title ? `${mediaData.title}.mp4` : 'media.mp4';
       const mimetype = 'video/mp4';
 
-      await conn.sendFile(m.chat, mediaBuffer, fileName, '*𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 © 𝚄𝙻𝚃𝚁𝙰-𝙼𝙳*', m, false, { mimetype });
+      await conn.sendFile(m.chat, mediaBuffer, fileName, '*Powered by Ultra-MD*', m, false, { mimetype });
       m.react('✅');
-    } 
-    // Handle image
+    }
+    // Handle image download
     else if (contentType.includes('image')) {
       const arrayBuffer = await response.arrayBuffer();
       const mediaBuffer = Buffer.from(arrayBuffer);
@@ -67,14 +66,14 @@ const handler = async (m, { conn, args }) => {
       const fileName = mediaData.title ? `${mediaData.title}.jpg` : 'media.jpg';
       const mimetype = 'image/jpeg';
 
-      await conn.sendFile(m.chat, mediaBuffer, fileName, '*𝙿𝙾𝚆𝙴𝚁𝙴𝙳 𝙱𝚈 © 𝚄𝙻𝚃𝚁𝙰-𝙼𝙳*', m, false, { mimetype });
+      await conn.sendFile(m.chat, mediaBuffer, fileName, '*Powered by Ultra-MD*', m, false, { mimetype });
       m.react('✅');
     } else {
       throw new Error('Unsupported media type');
     }
 
   } catch (error) {
-    console.error('Error processing Pinterest download:', error.message);
+    console.error('Error processing Google Drive download:', error.message);
     await m.reply('⚠️ An error occurred while processing the request. Please try again later.');
     m.react('❌');
   }
