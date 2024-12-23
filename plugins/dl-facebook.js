@@ -30,10 +30,11 @@ async function fetchWithTimeout(url, options, timeout = 10000) {
 }
 
 let handler = async (m, { conn, usedPrefix, args, command, text }) => {
-  if (!text) throw 'You need to give the URL of any Facebook video.';
-  m.react('⌛');
+  if (!text) throw 'You need to provide the URL of the Facebook video.';
 
-  // Prepare the fetch request options, including headers and timeout
+  m.react('⌛'); // Indicating that the bot is processing the request
+
+  // Prepare the fetch request options, including headers
   const options = {
     method: 'GET',
     headers: {
@@ -44,23 +45,25 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
   let res;
   try {
     // Call the fetch function with retry logic
-    res = await fetchWithRetry(`https://global-tech-api.vercel.app/fbvideo?url=${text}`, options);
+    res = await fetchWithRetry(`https://global-tech-api.vercel.app/fbvideo?url=${encodeURIComponent(text)}`, options);
   } catch (error) {
-    throw `An error occurred: ${error.message}`;
+    throw `An error occurred while fetching the video: ${error.message}`;
   }
 
   // Log the API response for debugging purposes
   console.log("API Response:", JSON.stringify(res, null, 2));
 
-  // Check if the response contains the result object and the necessary video URLs
+  // Ensure the response contains valid video data
   if (!res || !res.result || (!res.result.hd && !res.result.sd)) {
-    throw 'No video found or invalid response from API.';
+    throw 'No video found or invalid response from the API.';
   }
 
-  // Determine which video URL to send: prioritize HD, fall back to SD
-  const videoURL = res.result.hd || res.result.sd; // Use hd if available, otherwise sd
-  m.react('✅');
-  // Send the video file
+  // Choose the highest quality video available
+  const videoURL = res.result.hd || res.result.sd;
+  
+  m.react('✅'); // Indicating that the video is ready to be sent
+  
+  // Send the video to the user
   if (videoURL) {
     const cap = 'Here is the video you requested:';
     conn.sendFile(m.chat, videoURL, 'video.mp4', cap, m);
