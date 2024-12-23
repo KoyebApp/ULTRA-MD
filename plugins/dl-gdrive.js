@@ -1,6 +1,20 @@
 import pkg from 'nayan-videos-downloader';
 const { GDLink } = pkg;
 
+// Simple retry function for fetch requests
+const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) throw new Error(`Failed to fetch, status code: ${response.status}`);
+    return response;
+  } catch (error) {
+    if (retries === 0) throw new Error('Max retries reached. Could not fetch the media.');
+    console.log(`Fetch failed, retrying... (${retries} retries left)`);
+    await new Promise(resolve => setTimeout(resolve, delay)); // Delay before retry
+    return fetchWithRetry(url, options, retries - 1, delay); // Retry the fetch
+  }
+};
+
 const handler = async (m, { conn, args }) => {
   if (!args[0]) throw '✳️ Enter the Google Drive link next to the command';
 
@@ -89,3 +103,4 @@ handler.tags = ['downloader'];
 handler.command = ['gd', 'gdrive'];
 
 export default handler;
+  
