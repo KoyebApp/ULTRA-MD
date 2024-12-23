@@ -1,4 +1,4 @@
-import { File } from 'megajs'
+import * as mega from 'megajs'
 import path from 'path'
 
 let handler = async (m, { conn, args, usedPrefix, text, command }) => {
@@ -8,7 +8,7 @@ let handler = async (m, { conn, args, usedPrefix, text, command }) => {
       return m.reply(`Please provide the MEGA link. Example: ${usedPrefix + command} https://mega.nz/file/yourFileLink`)
 
     // Parse the file from the provided URL
-    const file = File.fromURL(text)
+    const file = mega.File.fromURL(text)
     await file.loadAttributes()
 
     // Check file size limit
