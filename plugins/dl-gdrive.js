@@ -82,6 +82,20 @@ const handler = async (m, { conn, args }) => {
 
       await conn.sendFile(m.chat, mediaBuffer, fileName, '*Powered by Ultra-MD*', m, false, { mimetype });
       m.react('✅');
+    }
+    // Handle document download (PDF, DOCX, etc.)
+    else if (contentType.includes('application/pdf') || contentType.includes('application/msword') || contentType.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+      const arrayBuffer = await response.arrayBuffer();
+      const mediaBuffer = Buffer.from(arrayBuffer);
+
+      if (mediaBuffer.length === 0) throw new Error('Downloaded document is empty');
+
+      const extension = contentType.includes('pdf') ? '.pdf' : '.docx';
+      const fileName = mediaData.title ? `${mediaData.title}${extension}` : `document${extension}`;
+      const mimetype = contentType.includes('pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+      await conn.sendFile(m.chat, mediaBuffer, fileName, '*Powered by Ultra-MD*', m, false, { mimetype });
+      m.react('✅');
     } else {
       throw new Error('Unsupported media type');
     }
@@ -103,4 +117,3 @@ handler.tags = ['downloader'];
 handler.command = ['gd', 'gdrive'];
 
 export default handler;
-  
