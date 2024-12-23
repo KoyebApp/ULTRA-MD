@@ -43,35 +43,25 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
   // Log the API response for debugging purposes
   console.log("API Response:", JSON.stringify(res, null, 2));
 
-  // Check if the response contains the result object and video URLs
-  if (!res || !res.result || (!res.result.hd && !res.result.sd && !res.result.audio)) {
+  // Check if the response contains the result object and the necessary video URLs
+  if (!res || !res.result || (!res.result.hd && !res.result.sd)) {
     throw 'No video found or invalid response from API.';
   }
 
-  // Create an array of media URLs (hd, sd, audio) from the response
-  const mediaArray = [];
-  if (res.result.hd) mediaArray.push({ type: 'video', url: res.result.hd });
-  if (res.result.sd) mediaArray.push({ type: 'video', url: res.result.sd });
-  if (res.result.audio) mediaArray.push({ type: 'audio', url: res.result.audio });
+  // Determine which video URL to send: prioritize HD, fall back to SD
+  const videoURL = res.result.hd || res.result.sd; // Use hd if available, otherwise sd
 
-  // Loop through each media item and send it
-  for (const mediaData of mediaArray) {
-    const mediaType = mediaData.type;
-    const mediaURL = mediaData.url;
-
-    let cap = `HERE IS THE ${mediaType.toUpperCase()} >,<`;
-
-    // Send video or audio based on the media type
-    if (mediaType === 'video') {
-      conn.sendFile(m.chat, mediaURL, 'x.mp4', cap, m);
-    } else if (mediaType === 'audio') {
-      conn.sendFile(m.chat, mediaURL, 'x.mp3', cap, m);
-    }
+  // Send the video file
+  if (videoURL) {
+    const cap = 'Here is the video you requested:';
+    conn.sendFile(m.chat, videoURL, 'video.mp4', cap, m);
+  } else {
+    throw 'No video available to download.';
   }
-}
+};
 
-handler.help = ['Facebook']
-handler.tags = ['downloader']
-handler.command = /^(facebook|fb|fbdl)$/i
+handler.help = ['Facebook'];
+handler.tags = ['downloader'];
+handler.command = /^(facebook|fb|fbdl)$/i;
 
 export default handler;
