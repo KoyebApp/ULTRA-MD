@@ -43,12 +43,16 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
   // Log the API response for debugging purposes
   console.log("API Response:", JSON.stringify(res, null, 2));
 
-  // Check if the response contains media data
-  if (!res || !res.media || res.media.length === 0) {
+  // Check if the response contains the result object and video URLs
+  if (!res || !res.result || (!res.result.hd && !res.result.sd && !res.result.audio)) {
     throw 'No video found or invalid response from API.';
   }
 
-  const mediaArray = res.media;
+  // Create an array of media URLs (hd, sd, audio) from the response
+  const mediaArray = [];
+  if (res.result.hd) mediaArray.push({ type: 'video', url: res.result.hd });
+  if (res.result.sd) mediaArray.push({ type: 'video', url: res.result.sd });
+  if (res.result.audio) mediaArray.push({ type: 'audio', url: res.result.audio });
 
   // Loop through each media item and send it
   for (const mediaData of mediaArray) {
@@ -57,11 +61,11 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
 
     let cap = `HERE IS THE ${mediaType.toUpperCase()} >,<`;
 
-    // Send video or image based on the media type
+    // Send video or audio based on the media type
     if (mediaType === 'video') {
-      conn.sendFile(m.chat, mediaURL, 'video.mp4', cap, m);
-    } else if (mediaType === 'image') {
-      conn.sendFile(m.chat, mediaURL, 'image.jpg', cap, m);
+      conn.sendFile(m.chat, mediaURL, 'x.mp4', cap, m);
+    } else if (mediaType === 'audio') {
+      conn.sendFile(m.chat, mediaURL, 'x.mp3', cap, m);
     }
   }
 }
