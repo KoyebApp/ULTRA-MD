@@ -1,10 +1,13 @@
-import axios from 'axios';
+import fetch from 'node-fetch';
 
 // Utility function for retrying the fetch request
 async function fetchWithRetry(url, options, retries = 3, delay = 3000) {
   try {
-    const response = await axios(url, options); // Use Axios to fetch the data
-    return response.data; // Axios automatically parses JSON, so we can use the data directly
+    const response = await fetchWithTimeout(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
   } catch (error) {
     if (retries > 0) {
       console.log(`Fetch failed, retrying... (${retries} retries left)`);
@@ -16,12 +19,23 @@ async function fetchWithRetry(url, options, retries = 3, delay = 3000) {
   }
 }
 
-let handler = async (m, { conn, usedPrefix, args, command, text }) => {
-  if (!text) throw 'You need to provide the URL of the Facebook video.';
-  m.reply('Please wait...');
+// Fetch with timeout logic
+async function fetchWithTimeout(url, options, timeout = 10000) {
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Request timed out')), timeout)
+  );
+  const fetchPromise = fetch(url, options);
+  const response = await Promise.race([fetchPromise, timeoutPromise]);
+  return response;
+}
 
-  // Prepare the fetch request options, including headers
+let handler = async (m, { conn, usedPrefix, args, command, text }) => {
+  if (!text) throw 'You need to give the URL of any Facebook video.';
+  m.react('⌛');
+
+  // Prepare the fetch request options, including headers and timeout
   const options = {
+    method: 'GET',
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     },
@@ -29,36 +43,30 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
 
   let res;
   try {
-    // Use Axios with retry logic
+    // Call the fetch function with retry logic
     res = await fetchWithRetry(`https://global-tech-api.vercel.app/fbvideo?url=${text}`, options);
   } catch (error) {
-    throw `An error occurred while fetching the video: ${error.message}`;
+    throw `An error occurred: ${error.message}`;
   }
 
   // Log the API response for debugging purposes
-  console.log("API Response:", JSON.stringify(res, null, 2)); // Full response to the console
+  console.log("API Response:", JSON.stringify(res, null, 2));
 
-  // Check if the response contains the necessary keys
-  if (!res || !res.result) {
-    console.log('Invalid or empty result:', res);
+  // Check if the response contains the result object and the necessary video URLs
+  if (!res || !res.result || (!res.result.hd && !res.result.sd)) {
     throw 'No video found or invalid response from API.';
   }
 
-  // Determine if HD or SD video URLs are available
-  const hdVideo = res.result.hd;
-  const sdVideo = res.result.sd;
-
-  if (!hdVideo && !sdVideo) {
-    console.log('No video URL found in response:', res.result);
+  // Determine which video URL to send: prioritize HD, fall back to SD
+  const videoURL = res.result.hd || res.result.sd; // Use hd if available, otherwise sd
+  m.react('✅');
+  // Send the video file
+  if (videoURL) {
+    const cap = 'Here is the video you requested:';
+    conn.sendFile(m.chat, videoURL, 'video.mp4', cap, m);
+  } else {
     throw 'No video available to download.';
   }
-
-  // Determine which video URL to send: prioritize HD, fall back to SD
-  const videoURL = hdVideo || sdVideo;
-
-  // Send the video file
-  const cap = 'Here is the video you requested:';
-  conn.sendFile(m.chat, videoURL, 'video.mp4', cap, m);
 };
 
 handler.help = ['Facebook'];
