@@ -1,8 +1,7 @@
 import fetch from 'node-fetch';
-import axios from 'axios';
 
 // Utility function for retrying the fetch request
-async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
+async function fetchWithRetry(url, options, retries = 5, delay = 10000) { // Increased delay to 10 seconds
   try {
     const response = await fetchWithTimeout(url, options);
     if (!response.ok) {
@@ -21,23 +20,13 @@ async function fetchWithRetry(url, options, retries = 5, delay = 5000) {
 }
 
 // Fetch with timeout logic
-async function fetchWithTimeout(url, options, timeout = 15000) {
+async function fetchWithTimeout(url, options, timeout = 30000) { // Increased timeout to 30 seconds
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('Request timed out')), timeout)
   );
   const fetchPromise = fetch(url, options);
   const response = await Promise.race([fetchPromise, timeoutPromise]);
   return response;
-}
-
-// Fallback function using Axios if fetch fails
-async function fetchWithAxios(url) {
-  try {
-    const response = await axios.get(url);
-    return response.data;
-  } catch (error) {
-    throw new Error(`Axios failed: ${error.message}`);
-  }
 }
 
 let handler = async (m, { conn, usedPrefix, args, command, text }) => {
@@ -55,16 +44,10 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
 
   let res;
   try {
-    // Try fetching using node-fetch
+    // Call the fetch function with retry logic
     res = await fetchWithRetry(`https://global-tech-api.vercel.app/fbvideo?url=${encodeURIComponent(text)}`, options);
   } catch (error) {
-    // If node-fetch fails, try using Axios
-    console.log('node-fetch failed, attempting with Axios');
-    try {
-      res = await fetchWithAxios(`https://global-tech-api.vercel.app/fbvideo?url=${encodeURIComponent(text)}`);
-    } catch (error) {
-      throw `An error occurred while fetching the video: ${error.message}`;
-    }
+    throw `An error occurred while fetching the video: ${error.message}`;
   }
 
   // Log the API response for debugging purposes
@@ -77,9 +60,9 @@ let handler = async (m, { conn, usedPrefix, args, command, text }) => {
 
   // Choose the highest quality video available
   const videoURL = res.result.hd || res.result.sd;
-
+  
   m.react('✅'); // Indicating that the video is ready to be sent
-
+  
   // Send the video to the user
   if (videoURL) {
     const cap = 'Here is the video you requested:';
@@ -94,4 +77,3 @@ handler.tags = ['downloader'];
 handler.command = /^(facebook|fb|fbdl)$/i;
 
 export default handler;
-  
