@@ -321,7 +321,8 @@ This project is licensed under the [Apache-2.0 license](LICENSE) - see the LICEN
 <p align="center">
   
  7. #### DEPLOY IN TERMUX/UBUNTU
- 
+ <details>
+   <summary>𝗖𝗟𝗜𝗖𝗞 𝗛𝗘𝗥𝗘</summary>
 ```
 apt update && apt upgrade -y
 ```
@@ -354,6 +355,7 @@ cd ULTRA-MD
 ```
 npm install && npm start
 ```
+</details>
 <a><img src='https://i.imgur.com/LyHic3i.gif'/></a><a><img src='https://i.imgur.com/LyHic3i.gif'/></a>
 
 - **Star ⭐ the repo if you like ULTRA-MD.**
