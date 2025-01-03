@@ -323,6 +323,7 @@ This project is licensed under the [Apache-2.0 license](LICENSE) - see the LICEN
  7. #### DEPLOY IN TERMUX/UBUNTU
  <details>
    <summary>𝗖𝗟𝗜𝗖𝗞 𝗛𝗘𝗥𝗘</summary>
+   
 ```
 apt update && apt upgrade -y
 ```
